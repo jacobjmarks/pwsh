@@ -1,0 +1,2 @@
+# pwsh
+Windows PowerShell Bootstrapper
