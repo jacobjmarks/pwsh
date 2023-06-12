@@ -14,7 +14,7 @@ winget install -e --id XP8K0HKJFRXGCK
 
 # Terminal-Icons https://github.com/devblackops/Terminal-Icons
 Write-Host "> Installing Terminal-Icons ..."
-Install-Module Terminal-Icons -Repository PSGallery
+Install-Module Terminal-Icons -Repository PSGallery -Force
 
 # posh-git https://github.com/dahlbyk/posh-git
 Write-Host "> Installing posh-git ..."
