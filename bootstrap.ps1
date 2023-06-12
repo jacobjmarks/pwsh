@@ -43,6 +43,6 @@ $ProfileScript = {
     Set-Alias which gcm
 }
 
-$ProfileScript.ToString().Trim() -replace "        ", "" | Out-File $PROFILE
+$ProfileScript.ToString().Trim() -replace "    ", "" | Out-File $PROFILE
 
 Write-Host "> Done!"
