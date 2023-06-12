@@ -8,6 +8,10 @@ winget install -e --id Microsoft.PowerShell
 Write-Host "> Installing Git ..."
 winget install -e --id Git.Git
 
+# gsudo https://github.com/gerardog/gsudo
+Write-Host "> Installing gsudo ..."
+winget install -e --id gerardog.gsudo
+
 # Oh My Posh (via Microsoft Store) https://github.com/jandedobbeleer/oh-my-posh
 Write-Host "> Installing Oh My Posh ..."
 winget install -e --id XP8K0HKJFRXGCK
