@@ -12,10 +12,6 @@ winget install -e --id Git.Git
 Write-Host "> Installing Oh My Posh ..."
 winget install -e --id XP8K0HKJFRXGCK
 
-# Oh My Posh - Theme
-Write-Host "> Downloading Oh My Posh theme ..."
-Invoke-WebRequest  | Out-File "$env:POSH_THEMES_PATH\paradox.omp.json"
-
 # Terminal-Icons https://github.com/devblackops/Terminal-Icons
 Write-Host "> Installing Terminal-Icons ..."
 Install-Module Terminal-Icons -Repository PSGallery
