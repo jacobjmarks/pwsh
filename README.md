@@ -8,6 +8,18 @@ irm "https://raw.githubusercontent.com/jacobjmarks/pwsh/main/bootstrap.ps1" | ie
 
 ![Preview](preview.png)
 
+## Windows Terminal Configuration
+
+| Setting | Value |
+| - | - |
+| Startup > Default profile | PowerShell |
+| Startup > Default terminal application | Windows Terminal |
+| Appearance > Application Theme | Dark |
+| Appearance > Use acrylic material in the tab row | On |
+| Profiles: Defaults > Additional settings: Appearance > Text: Color scheme | One Half Dark |
+| Profiles: Defaults > Additional settings: Appearance > Transparency: Background opacity | 75% |
+| Profiles: Defaults > Additional settings: Appearance > Transparency: Enable acrylic material | On |
+
 ## Optional Components
 
 While not installed via the bootstrapping script, you may find some additional useful components below.
