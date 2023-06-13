@@ -46,7 +46,25 @@ $ProfileScript = {
     Set-Alias grep findstr
     Set-Alias which gcm
 }
-
 $ProfileScript.ToString().Trim() -replace "    ", "" | Out-File $PROFILE
+
+# Font: Hack NF (https://github.com/ryanoasis/nerd-fonts)
+Write-Host "> Installing font: Hack NF ..."
+$TargetAsset = "Hack.zip"
+$FontFileFilter = "HackNerdFont-*.ttf"
+# download fonts archive
+$Release = Invoke-RestMethod "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest"
+$Asset = $Release.assets | Where-Object { $_.name -eq $TargetAsset }
+$TempFile = New-TemporaryFile
+Invoke-RestMethod $Asset.browser_download_url -OutFile $TempFile
+# extract fonts archive
+$TempFolder = New-Item -ItemType Directory -Path (Join-Path $TempFile.DirectoryName (New-Guid))
+Expand-Archive $TempFile $TempFolder
+# install fonts
+$ShellApplication = New-Object -ComObject Shell.Application
+$FontFiles = $ShellApplication.Namespace($TempFolder.FullName).Items()
+$FontFiles.Filter(0x40, $FontFileFilter)
+$FontsFolder = $ShellApplication.Namespace(0x14)
+$FontsFolder.CopyHere($FontFiles)
 
 Write-Host "> Done!"
