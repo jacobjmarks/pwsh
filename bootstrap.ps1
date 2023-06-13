@@ -1,70 +1,107 @@
 $ErrorActionPreference = "Stop"
 
-# PowerShell https://github.com/PowerShell/PowerShell
-Write-Host "> Installing PowerShell ..."
-winget install -e --id Microsoft.PowerShell
+$Steps = @(
+    @{
+        Descriptor  = "Installing PowerShell"
+        Metadata    = @{ Source = "https://github.com/PowerShell/PowerShell" }
+        ScriptBlock = {
+            winget install -e --id Microsoft.PowerShell
+        }
+    }
+    @{
+        Descriptor  = "Installing Git"
+        Metadata    = @{ Source = "https://git-scm.com/download/win" }
+        ScriptBlock = {
+            winget install -e --id Git.Git
+        }
+    }
+    @{
+        Descriptor  = "Installing gsudo"
+        Metadata    = @{ Source = "https://github.com/gerardog/gsudo" }
+        ScriptBlock = {
+            winget install -e --id gerardog.gsudo
+        }
+    }
+    @{
+        Descriptor  = "Installing Oh My Posh"
+        Metadata    = @{ Source = "https://github.com/jandedobbeleer/oh-my-posh" }
+        ScriptBlock = {
+            winget install -e --id XP8K0HKJFRXGCK # via Microsoft Store
+        }
+    }
+    @{
+        Descriptor  = "Installing Terminal-Icons"
+        Metadata    = @{ Source = "https://github.com/devblackops/Terminal-Icons" }
+        ScriptBlock = {
+            Install-Module Terminal-Icons -Repository PSGallery -Force
+        }
+    }
+    @{
+        Descriptor  = "Installing posh-git"
+        Metadata    = @{ Source = "https://github.com/dahlbyk/posh-git" }
+        ScriptBlock = {
+            Install-Module posh-git -Force
+        }
+    }
+    @{
+        Descriptor  = "Installing z"
+        Metadata    = @{ Source = "https://github.com/badmotorfinger/z" }
+        ScriptBlock = {
+            Install-Module z -Force
+        }
+    }
+    @{
+        Descriptor  = "Configuring PowerShell profile"
+        ScriptBlock = {
+            $ProfileScript = {
+                Import-Module posh-git
+                Import-Module Terminal-Icons
+        
+                oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\paradox.omp.json" | Invoke-Expression
+        
+                Set-PSReadLineOption -PredictionSource History
+                Set-PSReadLineOption -PredictionViewStyle ListView
+        
+                Set-Alias grep findstr
+                Set-Alias which gcm
+            }
 
-# Git https://git-scm.com/download/win
-Write-Host "> Installing Git ..."
-winget install -e --id Git.Git
+            $ProfileScript.ToString().Trim() -replace "                ", "" | Out-File $PROFILE
+        }
+    }
+    @{
+        Descriptor  = "Installing font: Hack Nerd Font"
+        Metadata    = @{ Source = "https://github.com/ryanoasis/nerd-fonts" }
+        ScriptBlock = {
+            $TargetAsset = "Hack.zip"
+            $FontFileFilter = "HackNerdFont-*.ttf"
 
-# gsudo https://github.com/gerardog/gsudo
-Write-Host "> Installing gsudo ..."
-winget install -e --id gerardog.gsudo
+            # download fonts archive
+            $Release = Invoke-RestMethod "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest"
+            $Asset = $Release.assets | Where-Object { $_.name -eq $TargetAsset }
+            $TempFile = New-TemporaryFile
+            Invoke-RestMethod $Asset.browser_download_url -OutFile $TempFile
 
-# Oh My Posh (via Microsoft Store) https://github.com/jandedobbeleer/oh-my-posh
-Write-Host "> Installing Oh My Posh ..."
-winget install -e --id XP8K0HKJFRXGCK
+            # extract fonts archive
+            $TempFolder = New-Item -ItemType Directory -Path (Join-Path $TempFile.DirectoryName (New-Guid))
+            Expand-Archive $TempFile $TempFolder
 
-# Terminal-Icons https://github.com/devblackops/Terminal-Icons
-Write-Host "> Installing Terminal-Icons ..."
-Install-Module Terminal-Icons -Repository PSGallery -Force
+            # install fonts
+            $ShellApplication = New-Object -ComObject Shell.Application
+            $FontFiles = $ShellApplication.Namespace($TempFolder.FullName).Items()
+            $FontFiles.Filter(0x40, $FontFileFilter)
+            $FontsFolder = $ShellApplication.Namespace(0x14)
+            $FontsFolder.CopyHere($FontFiles)
+        }
+    }
+)
 
-# posh-git https://github.com/dahlbyk/posh-git
-Write-Host "> Installing posh-git ..."
-Install-Module posh-git -Force
+Write-Host "> Bootstrapping ..."
 
-# # PSReadLine https://github.com/PowerShell/PSReadLine
-# Write-Host "> Installing PSReadLine ..."
-# Install-Module PSReadLine -Scope CurrentUser -AllowPrerelease -Force
-
-# z https://github.com/badmotorfinger/z
-Write-Host "> Installing z ..."
-Install-Module z -Force
-
-# Configure PowerShell profile
-Write-Host "> Configuring PowerShell profile ..."
-$ProfileScript = {
-    Import-Module posh-git
-    Import-Module Terminal-Icons
-
-    oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\paradox.omp.json" | Invoke-Expression
-
-    Set-PSReadLineOption -PredictionSource History
-    Set-PSReadLineOption -PredictionViewStyle ListView
-
-    Set-Alias grep findstr
-    Set-Alias which gcm
+for ($i = 0; $i -lt $Steps.Length; $i++) {
+    $Step = $Steps[$i]
+    Write-Host "> [$('{0:d2}' -f ($i + 1))/$('{0:d2}' -f $Steps.Length)] $($Step.Descriptor) ..."
+    Invoke-Command $Step.ScriptBlock
 }
-$ProfileScript.ToString().Trim() -replace "    ", "" | Out-File $PROFILE
-
-# Font: Hack NF (https://github.com/ryanoasis/nerd-fonts)
-Write-Host "> Installing font: Hack NF ..."
-$TargetAsset = "Hack.zip"
-$FontFileFilter = "HackNerdFont-*.ttf"
-# download fonts archive
-$Release = Invoke-RestMethod "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest"
-$Asset = $Release.assets | Where-Object { $_.name -eq $TargetAsset }
-$TempFile = New-TemporaryFile
-Invoke-RestMethod $Asset.browser_download_url -OutFile $TempFile
-# extract fonts archive
-$TempFolder = New-Item -ItemType Directory -Path (Join-Path $TempFile.DirectoryName (New-Guid))
-Expand-Archive $TempFile $TempFolder
-# install fonts
-$ShellApplication = New-Object -ComObject Shell.Application
-$FontFiles = $ShellApplication.Namespace($TempFolder.FullName).Items()
-$FontFiles.Filter(0x40, $FontFileFilter)
-$FontsFolder = $ShellApplication.Namespace(0x14)
-$FontsFolder.CopyHere($FontFiles)
 
 Write-Host "> Done!"
