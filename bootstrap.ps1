@@ -73,12 +73,13 @@ $Steps = @(
         Descriptor  = "Installing font: Hack Nerd Font"
         Metadata    = @{ Source = "https://github.com/ryanoasis/nerd-fonts" }
         ScriptBlock = {
-            $TargetAsset = "Hack.zip"
-            $FontFileFilter = "HackNerdFont-*.ttf"
+            $TargetRelease = "tags/v2.3.3"
+            $TargetAssetName = "Hack.zip"
+            $FontFileFilter = "* Nerd Font Complete Windows Compatible.ttf"
 
             # download fonts archive
-            $Release = Invoke-RestMethod "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest"
-            $Asset = $Release.assets | Where-Object { $_.name -eq $TargetAsset }
+            $Release = Invoke-RestMethod "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/$TargetRelease"
+            $Asset = $Release.assets | Where-Object { $_.name -eq $TargetAssetName }
             $TempFile = New-TemporaryFile
             Invoke-RestMethod $Asset.browser_download_url -OutFile $TempFile
 
