@@ -31,6 +31,7 @@ The bootstrapping script installs the latest version of the following components
 
 ### Applications
 
+- [Windows Terminal](https://github.com/microsoft/terminal)
 - [PowerShell Core](https://github.com/PowerShell/PowerShell)
 - [Git](https://git-scm.com/download/win)
 

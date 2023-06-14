@@ -2,6 +2,13 @@ $ErrorActionPreference = "Stop"
 
 $Steps = @(
     @{
+        Descriptor  = "Installing Windows Terminal"
+        Metadata    = @{ Source = "https://github.com/microsoft/terminal" }
+        ScriptBlock = {
+            winget install -e --id Microsoft.WindowsTerminal
+        }
+    }
+    @{
         Descriptor  = "Installing PowerShell"
         Metadata    = @{ Source = "https://github.com/PowerShell/PowerShell" }
         ScriptBlock = {
