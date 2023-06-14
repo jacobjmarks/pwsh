@@ -2,24 +2,63 @@
 
 Windows PowerShell Bootstrapper
 
+![Preview](preview.png)
+
+## Usage
+
 ``` pwsh
 irm "https://raw.githubusercontent.com/jacobjmarks/pwsh/main/bootstrap.ps1" | iex
 ```
 
-![Preview](preview.png)
+*Warning: The script will overrite the contents of your PowerShell profile, as determined by `$PROFILE`.*
 
 ## Windows Terminal Configuration
 
-| Setting | Value |
-| - | - |
-| Startup > Default profile | PowerShell |
-| Startup > Default terminal application | Windows Terminal |
-| Appearance > Application Theme | Dark |
-| Appearance > Use acrylic material in the tab row | On |
-| Profiles: Defaults > Additional settings: Appearance > Text: Color scheme | One Half Dark |
-| Profiles: Defaults > Additional settings: Appearance > Text: Font face | Hack NF |
-| Profiles: Defaults > Additional settings: Appearance > Transparency: Background opacity | 75% |
-| Profiles: Defaults > Additional settings: Appearance > Transparency: Enable acrylic material | On |
+| Setting                                                                                      | Value            |
+| -------------------------------------------------------------------------------------------- | ---------------- |
+| Startup > Default profile                                                                    | PowerShell       |
+| Startup > Default terminal application                                                       | Windows Terminal |
+| Appearance > Application Theme                                                               | Dark             |
+| Appearance > Use acrylic material in the tab row                                             | On               |
+| Profiles: Defaults > Additional settings: Appearance > Text: Color scheme                    | One Half Dark    |
+| Profiles: Defaults > Additional settings: Appearance > Text: Font face                       | Hack NF          |
+| Profiles: Defaults > Additional settings: Appearance > Transparency: Background opacity      | 75%              |
+| Profiles: Defaults > Additional settings: Appearance > Transparency: Enable acrylic material | On               |
+
+## Contents
+
+The bootstrapping script installs the latest version of the following components:
+
+### Applications
+
+- [PowerShell Core](https://github.com/PowerShell/PowerShell)
+- [Git](https://git-scm.com/download/win)
+
+### Modules / Tooling
+
+- [gsudo](https://github.com/gerardog/gsudo)\
+  A `sudo` equivalent for Windows.
+
+- [Oh My Posh](https://github.com/jandedobbeleer/oh-my-posh) (via Microsoft Store)\
+  *A prompt theme engine for any shell.*
+
+- [Terminal-Icons](https://github.com/devblackops/Terminal-Icons)\
+  Shows file and folder icons in the terminal.
+
+- [posh-git](https://github.com/dahlbyk/posh-git)\
+  Provides Git status information to the prompt.
+
+- [z](https://github.com/badmotorfinger/z)\
+  Directory jumper.
+
+### Fonts
+
+- [Hack Nerd Font (v2.3.3)](https://github.com/ryanoasis/nerd-fonts)
+
+### Command Aliases
+
+- `grep` -> `findstr`
+- `which` -> `gcm`
 
 ## Optional Components
 
