@@ -10,7 +10,7 @@ Windows PowerShell Bootstrapper
 irm "https://raw.githubusercontent.com/jacobjmarks/pwsh/main/bootstrap.ps1" | iex
 ```
 
-*Warning: The script will overrite the contents of your PowerShell profile, as determined by `$PROFILE`.*
+*Warning: The script will overwrite the contents of your PowerShell profile, as determined by `$PROFILE`.*
 
 ## Windows Terminal Configuration
 
