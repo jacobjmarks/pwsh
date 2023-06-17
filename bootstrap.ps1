@@ -73,6 +73,14 @@ $Steps = @(
                 Set-Alias which gcm
             }
 
+            if ((Test-Path $PROFILE) -and (Get-Content $PROFILE).Trim().Length -gt 0) {
+                Write-Warning "Your PowerShell profile is not empty!`n$PROFILE"
+                if ((Read-Host "> Overwrite? [yN]").Trim().ToLower() -ne 'y') {
+                    Write-Warning "Skipping step."
+                    return
+                }
+            }
+
             $ProfileScript.ToString().Trim() -replace "                ", "" | Out-File $PROFILE
         }
     }
