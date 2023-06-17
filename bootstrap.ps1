@@ -6,6 +6,8 @@ $Steps = @(
         Metadata    = @{ Source = "https://github.com/microsoft/terminal" }
         ScriptBlock = {
             winget install -e --id Microsoft.WindowsTerminal
+            $Version = (winget list -e --id Microsoft.WindowsTerminal).Split([Environment]::NewLine) | Select-Object -Last 1
+            Write-Host "> Version: $Version"
         }
     }
     @{
@@ -13,6 +15,8 @@ $Steps = @(
         Metadata    = @{ Source = "https://github.com/PowerShell/PowerShell" }
         ScriptBlock = {
             winget install -e --id Microsoft.PowerShell
+            $Version = (winget list -e --id Microsoft.PowerShell).Split([Environment]::NewLine) | Select-Object -Last 1
+            Write-Host "> Version: $Version"
         }
     }
     @{
@@ -20,6 +24,8 @@ $Steps = @(
         Metadata    = @{ Source = "https://git-scm.com/download/win" }
         ScriptBlock = {
             winget install -e --id Git.Git
+            $Version = (winget list -e --id Git.Git).Split([Environment]::NewLine) | Select-Object -Last 1
+            Write-Host "> Version: $Version"
         }
     }
     @{
@@ -27,6 +33,8 @@ $Steps = @(
         Metadata    = @{ Source = "https://github.com/gerardog/gsudo" }
         ScriptBlock = {
             winget install -e --id gerardog.gsudo
+            $Version = (winget list -e --id gerardog.gsudo).Split([Environment]::NewLine) | Select-Object -Last 1
+            Write-Host "> Version: $Version"
         }
     }
     @{
@@ -34,6 +42,8 @@ $Steps = @(
         Metadata    = @{ Source = "https://github.com/jandedobbeleer/oh-my-posh" }
         ScriptBlock = {
             winget install -e --id XP8K0HKJFRXGCK # via Microsoft Store
+            $Version = (winget list -e --id XP8K0HKJFRXGCK).Split([Environment]::NewLine) | Select-Object -Last 1
+            Write-Host "> Version: $Version"
         }
     }
     @{
