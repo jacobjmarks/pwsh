@@ -40,21 +40,24 @@ $Steps = @(
         Descriptor  = "Installing Terminal-Icons"
         Metadata    = @{ Source = "https://github.com/devblackops/Terminal-Icons" }
         ScriptBlock = {
-            Install-Module Terminal-Icons -Repository PSGallery -Force
+            Install-Module Terminal-Icons -Repository PSGallery
+            Write-Host "> Version: $((Get-Module Terminal-Icons).Version)"
         }
     }
     @{
         Descriptor  = "Installing posh-git"
         Metadata    = @{ Source = "https://github.com/dahlbyk/posh-git" }
         ScriptBlock = {
-            Install-Module posh-git -Force
+            Install-Module posh-git
+            Write-Host "> Version: $((Get-Module posh-git).Version)"
         }
     }
     @{
         Descriptor  = "Installing z"
         Metadata    = @{ Source = "https://github.com/badmotorfinger/z" }
         ScriptBlock = {
-            Install-Module z -Force
+            Install-Module z
+            Write-Host "> Version: $((Get-Module z).Version)"
         }
     }
     @{
@@ -82,6 +85,7 @@ $Steps = @(
             }
 
             $ProfileScript.ToString().Trim() -replace "                ", "" | Out-File $PROFILE
+            Write-Host "> Updated: $PROFILE"
         }
     }
     @{
