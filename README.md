@@ -54,11 +54,6 @@ The bootstrapping script installs the latest version of the following components
 
 - [Hack Nerd Font (v2.3.3)](https://github.com/ryanoasis/nerd-fonts)
 
-### Command Aliases
-
-- `grep` -> `findstr`
-- `which` -> `gcm`
-
 ## Optional Components
 
 While not installed via the bootstrapping script, you may find some additional useful components below.
