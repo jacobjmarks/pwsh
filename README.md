@@ -1,5 +1,3 @@
-# pwsh
-
 Windows PowerShell Core Bootstrapper
 
 ![Preview](preview.png)
