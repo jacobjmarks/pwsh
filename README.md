@@ -10,34 +10,46 @@ Uses Window's [winget](https://learn.microsoft.com/en-us/windows/package-manager
 
 ## Usage
 
+The script can be invoked with defaults via the following command:
+
 ``` pwsh
 irm "https://raw.githubusercontent.com/jacobjmarks/pwsh/main/bootstrap.ps1" | iex
 ```
 
 ## Advanced Usage
 
-Coming Soon&#8482;
+For advanced usage scenarios and customisation, download the script and utilise the available CLI arguments:
 
 ``` pwsh
 irm "https://raw.githubusercontent.com/jacobjmarks/pwsh/main/bootstrap.ps1" -OutFile bootstrap.ps1
 
-.\bootstrap.ps1 -?
+Get-Help -Detailed .\bootstrap.ps1
 ```
+
+### Available Parameters
+
+| Parameter   | Type     | Description                           | Default     |
+| ----------- | -------- | ------------------------------------- | ----------- |
+| `-Theme`    | `string` | Oh My Posh theme to configure for use | `"paradox"` |
+| `-NerdFont` | `string` | Nerd Font to install                  | `"Hack"`    |
+| `-NoFonts`  | `switch` | Skip installation of fonts            | `$false`    |
 
 ## Windows Terminal Configuration
 
+Once the bootstrapping script has been run, the following Windows Terminal configuration should be utilised.
+
 Settings marked with a star &#x2726; are *required*.
 
-|          | Setting                                                                                      | Value            |
-| -------- | -------------------------------------------------------------------------------------------- | ---------------- |
-|          | Startup > Default profile                                                                    | PowerShell       |
-|          | Startup > Default terminal application                                                       | Windows Terminal |
-|          | Appearance > Application Theme                                                               | Dark             |
-|          | Appearance > Use acrylic material in the tab row                                             | On               |
-|          | Profiles: Defaults > Additional settings: Appearance > Text: Color scheme                    | One Half Dark    |
-| &#x2726; | Profiles: Defaults > Additional settings: Appearance > Text: Font face                       | Hack NF          |
-|          | Profiles: Defaults > Additional settings: Appearance > Transparency: Background opacity      | 75%              |
-|          | Profiles: Defaults > Additional settings: Appearance > Transparency: Enable acrylic material | On               |
+|          | Setting                                                                                      | Value                               |
+| -------- | -------------------------------------------------------------------------------------------- | ----------------------------------- |
+|          | Startup > Default profile                                                                    | PowerShell                          |
+|          | Startup > Default terminal application                                                       | Windows Terminal                    |
+|          | Appearance > Application Theme                                                               | Dark                                |
+|          | Appearance > Use acrylic material in the tab row                                             | On                                  |
+|          | Profiles: Defaults > Additional settings: Appearance > Text: Color scheme                    | One Half Dark                       |
+| &#x2726; | Profiles: Defaults > Additional settings: Appearance > Text: Font face                       | Hack NF<br>(or your font of choice) |
+|          | Profiles: Defaults > Additional settings: Appearance > Transparency: Background opacity      | 75%                                 |
+|          | Profiles: Defaults > Additional settings: Appearance > Transparency: Enable acrylic material | On                                  |
 
 ## Contents
 
