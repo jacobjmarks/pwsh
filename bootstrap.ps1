@@ -1,3 +1,8 @@
+<#
+    .SYNOPSIS
+        Windows PowerShell Core bootstrapper
+#>
+
 $ErrorActionPreference = "Stop"
 
 $Steps = @(
