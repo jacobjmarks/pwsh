@@ -1,8 +1,14 @@
 # pwsh
 
-Windows PowerShell Bootstrapper
+Windows PowerShell Core Bootstrapper
 
 ![Preview](preview.png)
+
+A script to install and configure a Windows PowerShell Core environment powered by [Oh My Posh](https://ohmyposh.dev/), for use in [Windows Terminal](https://learn.microsoft.com/en-au/windows/terminal/).
+
+Designed to be largely non-opinionated, non-clobbering, and repeatable.
+
+Uses Window's [winget](https://learn.microsoft.com/en-us/windows/package-manager/) over other third-party package managers for lightweight and as-native application installation.
 
 ## Usage
 
@@ -10,22 +16,34 @@ Windows PowerShell Bootstrapper
 irm "https://raw.githubusercontent.com/jacobjmarks/pwsh/main/bootstrap.ps1" | iex
 ```
 
+## Advanced Usage
+
+Coming Soon&#8482;
+
+``` pwsh
+irm "https://raw.githubusercontent.com/jacobjmarks/pwsh/main/bootstrap.ps1" -OutFile bootstrap.ps1
+
+.\bootstrap.ps1 -?
+```
+
 ## Windows Terminal Configuration
 
-| Setting                                                                                      | Value            |
-| -------------------------------------------------------------------------------------------- | ---------------- |
-| Startup > Default profile                                                                    | PowerShell       |
-| Startup > Default terminal application                                                       | Windows Terminal |
-| Appearance > Application Theme                                                               | Dark             |
-| Appearance > Use acrylic material in the tab row                                             | On               |
-| Profiles: Defaults > Additional settings: Appearance > Text: Color scheme                    | One Half Dark    |
-| Profiles: Defaults > Additional settings: Appearance > Text: Font face                       | Hack NF          |
-| Profiles: Defaults > Additional settings: Appearance > Transparency: Background opacity      | 75%              |
-| Profiles: Defaults > Additional settings: Appearance > Transparency: Enable acrylic material | On               |
+Settings marked with a star &#x2726; are *required*.
+
+|          | Setting                                                                                      | Value            |
+| -------- | -------------------------------------------------------------------------------------------- | ---------------- |
+|          | Startup > Default profile                                                                    | PowerShell       |
+|          | Startup > Default terminal application                                                       | Windows Terminal |
+|          | Appearance > Application Theme                                                               | Dark             |
+|          | Appearance > Use acrylic material in the tab row                                             | On               |
+|          | Profiles: Defaults > Additional settings: Appearance > Text: Color scheme                    | One Half Dark    |
+| &#x2726; | Profiles: Defaults > Additional settings: Appearance > Text: Font face                       | Hack NF          |
+|          | Profiles: Defaults > Additional settings: Appearance > Transparency: Background opacity      | 75%              |
+|          | Profiles: Defaults > Additional settings: Appearance > Transparency: Enable acrylic material | On               |
 
 ## Contents
 
-The bootstrapping script installs the latest version of the following components:
+The script installs the latest version of the following components (unless otherwise stated):
 
 ### Applications
 
@@ -53,6 +71,13 @@ The bootstrapping script installs the latest version of the following components
 ### Fonts
 
 - [Hack Nerd Font (v2.3.3)](https://github.com/ryanoasis/nerd-fonts)
+
+## Inspiration
+
+- [How to set up PowerShell prompt with Oh My Posh on Windows 11 by @devaslife | YouTube](https://youtu.be/5-aK2_WwrmM)
+- [Tutorial: Set up a custom prompt for PowerShell or WSL with Oh My Posh | Microsoft Learn](https://learn.microsoft.com/en-us/windows/terminal/tutorials/custom-prompt-setup)
+
+# Next Steps
 
 ## Optional Components
 
