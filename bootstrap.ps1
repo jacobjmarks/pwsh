@@ -16,6 +16,21 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function WithPwsh {
+    param(
+        [Parameter(Mandatory = $true)]
+        [scriptblock]
+        $Command
+    )
+
+    if ($PSEdition -ne 'Core') {
+        pwsh -NoProfile -c $Command
+    }
+    else {
+        Invoke-Command -NoNewScope $Command
+    }
+}
+
 $NonTerminatingErrorCount = 0
 
 $Steps = @(
@@ -63,24 +78,30 @@ $Steps = @(
         Descriptor  = "Installing Terminal-Icons"
         Metadata    = @{ Source = "https://github.com/devblackops/Terminal-Icons" }
         ScriptBlock = {
-            Install-Module Terminal-Icons -Repository PSGallery
-            Write-Host "> Version: $((Get-Module Terminal-Icons).Version)"
+            WithPwsh {
+                Install-Module Terminal-Icons -Repository PSGallery
+                Write-Host "> Version: $((Get-InstalledModule Terminal-Icons).Version)"
+            }
         }
     }
     @{
         Descriptor  = "Installing posh-git"
         Metadata    = @{ Source = "https://github.com/dahlbyk/posh-git" }
         ScriptBlock = {
-            Install-Module posh-git
-            Write-Host "> Version: $((Get-Module posh-git).Version)"
+            WithPwsh {
+                Install-Module posh-git
+                Write-Host "> Version: $((Get-InstalledModule posh-git).Version)"
+            }
         }
     }
     @{
         Descriptor  = "Installing z"
         Metadata    = @{ Source = "https://github.com/badmotorfinger/z" }
         ScriptBlock = {
-            Install-Module z
-            Write-Host "> Version: $((Get-Module z).Version)"
+            WithPwsh {
+                Install-Module z
+                Write-Host "> Version: $((Get-InstalledModule z).Version)"
+            }
         }
     }
     @{
@@ -105,16 +126,18 @@ $Steps = @(
                 Set-PSReadLineOption -PredictionViewStyle ListView
             }.ToString() -replace "{{THEME_FILE_NAME}}", $ThemeFile.Name
 
-            if ((Test-Path $PROFILE) -and (Get-Content $PROFILE).Trim().Length -gt 0) {
-                Write-Warning "Your PowerShell profile is not empty.`n$PROFILE"
+            $PwshProfile = WithPwsh { $PROFILE }
+
+            if ((Test-Path $PwshProfile) -and (Get-Content $PwshProfile).Trim().Length -gt 0) {
+                Write-Warning "Your PowerShell profile is not empty.`n$PwshProfile"
                 if ((Read-Host "> Overwrite? [yN]").Trim().ToLower() -ne 'y') {
                     Write-Warning "Skipping step."
                     return
                 }
             }
 
-            $ProfileScript.Trim() -replace "                ", "" | Out-File $PROFILE
-            Write-Host "> Updated: $PROFILE"
+            $ProfileScript.Trim() -replace "                ", "" | Out-File $PwshProfile
+            Write-Host "> Updated: $PwshProfile"
         }
     }
     @{
@@ -140,11 +163,14 @@ $Steps = @(
                 $Script:NonTerminatingErrorCount++
                 return
             }
-            $TempFile = New-TemporaryFile
+
+            $TempDirectory = [System.IO.Path]::GetTempPath()
+
+            $TempFile = New-Item -ItemType File -Path $TempDirectory -Name "$(New-Guid).zip"
             Invoke-RestMethod $Asset.browser_download_url -OutFile $TempFile
 
             # extract fonts archive
-            $TempFolder = New-Item -ItemType Directory -Path (Join-Path $TempFile.DirectoryName (New-Guid))
+            $TempFolder = New-Item -ItemType Directory -Path $TempDirectory -Name (New-Guid)
             Expand-Archive $TempFile $TempFolder
 
             # install fonts
