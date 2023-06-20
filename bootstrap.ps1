@@ -36,72 +36,50 @@ $NonTerminatingErrorCount = 0
 $Steps = @(
     @{
         Descriptor  = "Installing Windows Terminal"
-        Metadata    = @{ Source = "https://github.com/microsoft/terminal" }
         ScriptBlock = {
             winget install -e --id Microsoft.WindowsTerminal
-            Write-Host "> $((winget list -e --id Microsoft.WindowsTerminal).Split([Environment]::NewLine) | Select-Object -Last 1)"
         }
     }
     @{
         Descriptor  = "Installing PowerShell"
-        Metadata    = @{ Source = "https://github.com/PowerShell/PowerShell" }
         ScriptBlock = {
             winget install -e --id Microsoft.PowerShell
-            Write-Host "> $((winget list -e --id Microsoft.PowerShell).Split([Environment]::NewLine) | Select-Object -Last 1)"
         }
     }
     @{
         Descriptor  = "Installing Git"
-        Metadata    = @{ Source = "https://git-scm.com/download/win" }
         ScriptBlock = {
             winget install -e --id Git.Git
-            Write-Host "> $((winget list -e --id Git.Git).Split([Environment]::NewLine) | Select-Object -Last 1)"
         }
     }
     @{
         Descriptor  = "Installing gsudo"
-        Metadata    = @{ Source = "https://github.com/gerardog/gsudo" }
         ScriptBlock = {
             winget install -e --id gerardog.gsudo
-            Write-Host "> $((winget list -e --id gerardog.gsudo).Split([Environment]::NewLine) | Select-Object -Last 1)"
         }
     }
     @{
         Descriptor  = "Installing Oh My Posh"
-        Metadata    = @{ Source = "https://github.com/jandedobbeleer/oh-my-posh" }
         ScriptBlock = {
             winget install -e --id XP8K0HKJFRXGCK # via Microsoft Store
-            Write-Host "> $((winget list -e --id XP8K0HKJFRXGCK).Split([Environment]::NewLine) | Select-Object -Last 1)"
         }
     }
     @{
         Descriptor  = "Installing Terminal-Icons"
-        Metadata    = @{ Source = "https://github.com/devblackops/Terminal-Icons" }
         ScriptBlock = {
-            WithPwsh {
-                Install-Module Terminal-Icons -Repository PSGallery
-                Write-Host "> Version: $((Get-InstalledModule Terminal-Icons).Version)"
-            }
+            WithPwsh { Install-Module Terminal-Icons -Repository PSGallery }
         }
     }
     @{
         Descriptor  = "Installing posh-git"
-        Metadata    = @{ Source = "https://github.com/dahlbyk/posh-git" }
         ScriptBlock = {
-            WithPwsh {
-                Install-Module posh-git
-                Write-Host "> Version: $((Get-InstalledModule posh-git).Version)"
-            }
+            WithPwsh { Install-Module posh-git }
         }
     }
     @{
         Descriptor  = "Installing z"
-        Metadata    = @{ Source = "https://github.com/badmotorfinger/z" }
         ScriptBlock = {
-            WithPwsh {
-                Install-Module z
-                Write-Host "> Version: $((Get-InstalledModule z).Version)"
-            }
+            WithPwsh { Install-Module z }
         }
     }
     @{
@@ -142,7 +120,6 @@ $Steps = @(
     }
     @{
         Descriptor  = "Installing font: $NerdFont Nerd Font"
-        Metadata    = @{ Source = "https://github.com/ryanoasis/nerd-fonts" }
         ScriptBlock = {
             if ($NoFonts) {
                 Write-Warning "Skipping step."
