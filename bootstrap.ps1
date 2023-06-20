@@ -22,7 +22,6 @@ $Steps = @(
     @{
         Descriptor  = "Installing Windows Terminal"
         Metadata    = @{ Source = "https://github.com/microsoft/terminal" }
-        Skip        = $true
         ScriptBlock = {
             winget install -e --id Microsoft.WindowsTerminal
             Write-Host "> $((winget list -e --id Microsoft.WindowsTerminal).Split([Environment]::NewLine) | Select-Object -Last 1)"
@@ -31,7 +30,6 @@ $Steps = @(
     @{
         Descriptor  = "Installing PowerShell"
         Metadata    = @{ Source = "https://github.com/PowerShell/PowerShell" }
-        Skip        = $true
         ScriptBlock = {
             winget install -e --id Microsoft.PowerShell
             Write-Host "> $((winget list -e --id Microsoft.PowerShell).Split([Environment]::NewLine) | Select-Object -Last 1)"
@@ -40,7 +38,6 @@ $Steps = @(
     @{
         Descriptor  = "Installing Git"
         Metadata    = @{ Source = "https://git-scm.com/download/win" }
-        Skip        = $true
         ScriptBlock = {
             winget install -e --id Git.Git
             Write-Host "> $((winget list -e --id Git.Git).Split([Environment]::NewLine) | Select-Object -Last 1)"
@@ -49,7 +46,6 @@ $Steps = @(
     @{
         Descriptor  = "Installing gsudo"
         Metadata    = @{ Source = "https://github.com/gerardog/gsudo" }
-        Skip        = $true
         ScriptBlock = {
             winget install -e --id gerardog.gsudo
             Write-Host "> $((winget list -e --id gerardog.gsudo).Split([Environment]::NewLine) | Select-Object -Last 1)"
@@ -58,7 +54,6 @@ $Steps = @(
     @{
         Descriptor  = "Installing Oh My Posh"
         Metadata    = @{ Source = "https://github.com/jandedobbeleer/oh-my-posh" }
-        Skip        = $true
         ScriptBlock = {
             winget install -e --id XP8K0HKJFRXGCK # via Microsoft Store
             Write-Host "> $((winget list -e --id XP8K0HKJFRXGCK).Split([Environment]::NewLine) | Select-Object -Last 1)"
@@ -67,7 +62,6 @@ $Steps = @(
     @{
         Descriptor  = "Installing Terminal-Icons"
         Metadata    = @{ Source = "https://github.com/devblackops/Terminal-Icons" }
-        Skip        = $true
         ScriptBlock = {
             Install-Module Terminal-Icons -Repository PSGallery
             Write-Host "> Version: $((Get-Module Terminal-Icons).Version)"
@@ -76,7 +70,6 @@ $Steps = @(
     @{
         Descriptor  = "Installing posh-git"
         Metadata    = @{ Source = "https://github.com/dahlbyk/posh-git" }
-        Skip        = $true
         ScriptBlock = {
             Install-Module posh-git
             Write-Host "> Version: $((Get-Module posh-git).Version)"
@@ -85,7 +78,6 @@ $Steps = @(
     @{
         Descriptor  = "Installing z"
         Metadata    = @{ Source = "https://github.com/badmotorfinger/z" }
-        Skip        = $true
         ScriptBlock = {
             Install-Module z
             Write-Host "> Version: $((Get-Module z).Version)"
@@ -93,7 +85,6 @@ $Steps = @(
     }
     @{
         Descriptor  = "Configuring PowerShell profile"
-        Skip        = $false
         ScriptBlock = {
             $ThemeFile = [System.IO.FileInfo](Join-Path $env:POSH_THEMES_PATH "$Theme.omp.json")
             if (-Not $ThemeFile.Exists) {
@@ -129,7 +120,6 @@ $Steps = @(
     @{
         Descriptor  = "Installing font: $NerdFont Nerd Font"
         Metadata    = @{ Source = "https://github.com/ryanoasis/nerd-fonts" }
-        Skip        = $false
         ScriptBlock = {
             if ($NoFonts) {
                 Write-Warning "Skipping step."
