@@ -33,6 +33,13 @@ function WithPwsh {
 
 $NonTerminatingErrorCount = 0
 
+function RefreshPath {
+    $env:Path = @(
+        [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+        [System.Environment]::GetEnvironmentVariable("Path", "User")
+    ) -match '.' -join ';'
+}
+
 $Steps = @(
     @{
         Descriptor  = "Installing Windows Terminal"
@@ -44,6 +51,7 @@ $Steps = @(
         Descriptor  = "Installing PowerShell"
         ScriptBlock = {
             winget install -e --id Microsoft.PowerShell
+            RefreshPath
         }
     }
     @{
@@ -85,9 +93,10 @@ $Steps = @(
     @{
         Descriptor  = "Configuring PowerShell profile"
         ScriptBlock = {
-            $ThemeFile = [System.IO.FileInfo](Join-Path $env:POSH_THEMES_PATH "$Theme.omp.json")
+            $PoshThemesPath = [System.Environment]::GetEnvironmentVariable("POSH_THEMES_PATH", "User")
+            $ThemeFile = [System.IO.FileInfo](Join-Path $PoshThemesPath "$Theme.omp.json")
             if (-Not $ThemeFile.Exists) {
-                $AvailableThemes = Get-ChildItem $env:POSH_THEMES_PATH -Filter "*.omp.json" `
+                $AvailableThemes = Get-ChildItem $PoshThemesPath -Filter "*.omp.json" `
                 | ForEach-Object { $_.Name -replace ".omp.json", "" } | Join-String -Separator ", "
                 Write-Error -ErrorAction 'Continue' "Oh My Posh theme '$Theme' not found. Expected one of: $AvailableThemes"
                 $Script:NonTerminatingErrorCount++
