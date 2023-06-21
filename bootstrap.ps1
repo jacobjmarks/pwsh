@@ -3,6 +3,8 @@
         Windows PowerShell Core bootstrapper
 #>
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs')]
+
 param(
     # Oh My Posh theme to configure for use
     [string] $Theme = "paradox",
@@ -16,11 +18,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-function WithPwsh {
+$NonTerminatingErrorCount = 0
+
+function With-Pwsh {
     param(
         [Parameter(Mandatory = $true)]
-        [scriptblock]
-        $Command
+        [scriptblock] $Command
     )
 
     if ($PSEdition -ne 'Core') {
@@ -30,8 +33,6 @@ function WithPwsh {
         Invoke-Command -NoNewScope $Command
     }
 }
-
-$NonTerminatingErrorCount = 0
 
 function RefreshPath {
     $env:Path = @(
@@ -75,19 +76,19 @@ $Steps = @(
     @{
         Descriptor  = "Installing Terminal-Icons"
         ScriptBlock = {
-            WithPwsh { Install-Module Terminal-Icons -Repository PSGallery }
+            With-Pwsh { Install-Module Terminal-Icons }
         }
     }
     @{
         Descriptor  = "Installing posh-git"
         ScriptBlock = {
-            WithPwsh { Install-Module posh-git }
+            With-Pwsh { Install-Module posh-git }
         }
     }
     @{
         Descriptor  = "Installing z"
         ScriptBlock = {
-            WithPwsh { Install-Module z }
+            With-Pwsh { Install-Module z }
         }
     }
     @{
@@ -113,7 +114,7 @@ $Steps = @(
                 Set-PSReadLineOption -PredictionViewStyle ListView
             }.ToString() -replace "{{THEME_FILE_NAME}}", $ThemeFile.Name
 
-            $PwshProfile = WithPwsh { $PROFILE }
+            $PwshProfile = With-Pwsh { $PROFILE }
 
             if ((Test-Path $PwshProfile) -and (Get-Content $PwshProfile).Trim().Length -gt 0) {
                 Write-Warning "Your PowerShell profile is not empty.`n$PwshProfile"
