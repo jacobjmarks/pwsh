@@ -3,7 +3,7 @@
         Windows PowerShell Core bootstrapper
 #>
 
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs')]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
 
 param(
     # Oh My Posh theme to configure for use
