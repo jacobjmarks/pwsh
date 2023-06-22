@@ -3,8 +3,6 @@
         Windows PowerShell Core bootstrapper
 #>
 
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-
 param(
     # Oh My Posh theme to configure for use
     [string] $Theme = "paradox",
@@ -20,25 +18,25 @@ $ErrorActionPreference = "Stop"
 
 $NonTerminatingErrorCount = 0
 
-function With-Pwsh {
-    param(
-        [Parameter(Mandatory = $true)]
-        [scriptblock] $Command
-    )
-
-    if ($PSEdition -ne 'Core') {
-        pwsh -NoProfile -c $Command
-    }
-    else {
-        Invoke-Command -NoNewScope $Command
-    }
-}
-
-function RefreshPath {
+function Update-Path {
     $env:Path = @(
         [System.Environment]::GetEnvironmentVariable("Path", "Machine")
         [System.Environment]::GetEnvironmentVariable("Path", "User")
     ) -match '.' -join ';'
+}
+
+function Invoke-WithCore {
+    param (
+        [Parameter(Mandatory)]
+        [ScriptBlock] $ScriptBlock
+    )
+
+    if ($PSEdition -ne 'Core') {
+        pwsh -NoProfile -c $ScriptBlock
+    }
+    else {
+        Invoke-Command -NoNewScope $ScriptBlock
+    }
 }
 
 function Get-FontFamilyName {
@@ -144,7 +142,7 @@ $Steps = @(
         Descriptor  = "Installing PowerShell"
         ScriptBlock = {
             winget install -e --id Microsoft.PowerShell
-            RefreshPath
+            Refresh-Path
         }
     }
     @{
@@ -168,19 +166,19 @@ $Steps = @(
     @{
         Descriptor  = "Installing Terminal-Icons"
         ScriptBlock = {
-            With-Pwsh { Install-Module Terminal-Icons }
+            Invoke-WithCore { Install-Module Terminal-Icons }
         }
     }
     @{
         Descriptor  = "Installing posh-git"
         ScriptBlock = {
-            With-Pwsh { Install-Module posh-git }
+            Invoke-WithCore { Install-Module posh-git }
         }
     }
     @{
         Descriptor  = "Installing z"
         ScriptBlock = {
-            With-Pwsh { Install-Module z }
+            Invoke-WithCore { Install-Module z }
         }
     }
     @{
@@ -206,7 +204,7 @@ $Steps = @(
                 Set-PSReadLineOption -PredictionViewStyle ListView
             }.ToString() -replace "{{THEME_FILE_NAME}}", $ThemeFile.Name
 
-            $PwshProfile = With-Pwsh { $PROFILE }
+            $PwshProfile = Invoke-WithCore { $PROFILE }
 
             if ((Test-Path $PwshProfile) -and (Get-Content $PwshProfile).Trim().Length -gt 0) {
                 Write-Warning "Your PowerShell profile is not empty.`n$PwshProfile"
