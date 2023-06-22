@@ -142,7 +142,7 @@ $Steps = @(
         Descriptor  = "Installing PowerShell"
         ScriptBlock = {
             winget install -e --id Microsoft.PowerShell
-            Refresh-Path
+            Update-Path
         }
     }
     @{
