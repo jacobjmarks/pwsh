@@ -124,8 +124,7 @@ function Update-TerminalSettings {
         Write-Host "    $($Entry.SettingPath) = $(if($Entry.CurrentValue){$Entry.CurrentValue}else{"NULL"}) -> $($Entry.DesiredValue)"
     }
 
-    $ShouldProceed = Read-Host "> Update Windows Terminal settings as above? (recommended) [yN]"
-    if ($ShouldProceed.Trim().ToLower() -ne 'y') {
+    if ($Host.UI.PromptForChoice($null, "Update Windows Terminal settings as above? (recommended)", @("&Yes", "&No"), 1) -ne 0) {
         return
     }
 
@@ -230,8 +229,7 @@ $Steps = @(
 
             if ((Test-Path $PwshProfile) -and (Get-Content $PwshProfile).Trim().Length -gt 0) {
                 Write-Warning "Your PowerShell profile is not empty.`n$PwshProfile"
-                if ((Read-Host "> Overwrite? [yN]").Trim().ToLower() -ne 'y') {
-                    Write-Warning "Skipping step."
+                if ($Host.UI.PromptForChoice($null, "Overwrite?", @("&Yes", "&No"), 1) -ne 0) {
                     return
                 }
             }
