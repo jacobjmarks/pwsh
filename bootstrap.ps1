@@ -17,6 +17,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $NonTerminatingErrorCount = 0
+$WindowsTerminalSettingsFile = (Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
 
 function Update-Path {
     $env:Path = @(
@@ -56,11 +57,28 @@ function Get-FontFamilyName {
     }
 }
 
-function Update-TerminalSettings {
-    Write-Host "> Checking Windows Terminal settings ..."
+function Initialize-TerminalSettings {
+    if (Test-Path $WindowsTerminalSettingsFile) {
+        return
+    }
 
-    $TerminalSettingsFile = [System.IO.FileInfo](Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
-    $TerminalSettings = Get-Content $TerminalSettingsFile.FullName | ConvertFrom-Json
+    Write-Host "> Initializing Windows Terminal settings ..."
+
+    wt --version # Starts a new Terminal process
+
+    # Wait for the Terminal process to initialise its settings file, then terminate
+    $LatestWindowsTerminalProcess = @(Get-Process -Name WindowsTerminal -ErrorAction Ignore) | Sort-Object -Property StartTime | Select-Object -Last 1
+    while (-Not (Test-Path $WindowsTerminalSettingsFile)) {
+        Start-Sleep -Milliseconds 50
+    }
+    $LatestWindowsTerminalProcess | Stop-Process
+}
+
+function Update-TerminalSettings {
+    Initialize-TerminalSettings
+
+    Write-Host "> Checking Windows Terminal settings ..."
+    $TerminalSettings = Get-Content $WindowsTerminalSettingsFile | ConvertFrom-Json
 
     $PowerShellCoreProfile = $TerminalSettings.profiles.list | Where-Object { $_.source -eq "Windows.Terminal.PowershellCore" }
 
@@ -127,8 +145,8 @@ function Update-TerminalSettings {
         $Ptr | Add-Member -NotePropertyName ($Segments | Select-Object -Last 1) -NotePropertyValue $Entry.DesiredValue
     }
 
-    $TerminalSettings | ConvertTo-Json -Depth 100 | Out-File $TerminalSettingsFile -Encoding utf8
-    Write-Host "> Updated: $TerminalSettingsFile"
+    $TerminalSettings | ConvertTo-Json -Depth 100 | Out-File $WindowsTerminalSettingsFile -Encoding utf8
+    Write-Host "> Updated: $WindowsTerminalSettingsFile"
 }
 
 $Steps = @(
@@ -136,6 +154,7 @@ $Steps = @(
         Descriptor  = "Installing Windows Terminal"
         ScriptBlock = {
             winget install -e --id Microsoft.WindowsTerminal
+            Update-Path
         }
     }
     @{
@@ -149,18 +168,21 @@ $Steps = @(
         Descriptor  = "Installing Git"
         ScriptBlock = {
             winget install -e --id Git.Git
+            Update-Path
         }
     }
     @{
         Descriptor  = "Installing gsudo"
         ScriptBlock = {
             winget install -e --id gerardog.gsudo
+            Update-Path
         }
     }
     @{
         Descriptor  = "Installing Oh My Posh"
         ScriptBlock = {
             winget install -e --id XP8K0HKJFRXGCK # via Microsoft Store
+            Update-Path
         }
     }
     @{
