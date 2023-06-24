@@ -148,7 +148,7 @@ function Update-TerminalSettings {
         }
 
         # set desired value
-        $Ptr | Add-Member -NotePropertyName ($Segments | Select-Object -Last 1) -NotePropertyValue $Entry.DesiredValue
+        $Ptr | Add-Member -NotePropertyName ($Segments | Select-Object -Last 1) -NotePropertyValue $Entry.DesiredValue -Force
     }
 
     $TerminalSettings | ConvertTo-Json -Depth 100 | Out-File $WindowsTerminalSettingsFile -Encoding utf8
