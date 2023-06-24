@@ -80,14 +80,7 @@ function Update-TerminalSettings {
     Write-Host "> Checking Windows Terminal settings ..."
     $TerminalSettings = Get-Content $WindowsTerminalSettingsFile | ConvertFrom-Json
 
-    $PowerShellCoreProfile = $TerminalSettings.profiles.list | Where-Object { $_.source -eq "Windows.Terminal.PowershellCore" }
-
     $Manifest = @(
-        @{
-            SettingPath  = "defaultProfile"
-            CurrentValue = $TerminalSettings.defaultProfile
-            DesiredValue = $PowerShellCoreProfile.guid
-        }
         @{
             SettingPath  = "profiles.defaults.colorScheme"
             CurrentValue = $TerminalSettings.profiles.defaults.colorScheme
@@ -114,6 +107,20 @@ function Update-TerminalSettings {
             DesiredValue = $true
         }
     )
+
+    $CoreTerminalProfile = $TerminalSettings.profiles.list | Where-Object { $_.source -eq "Windows.Terminal.PowershellCore" } | Select-Object -First 1
+    if ($CoreTerminalProfile) {
+        $Manifest += @{
+            SettingPath  = "defaultProfile"
+            CurrentValue = $TerminalSettings.defaultProfile
+            DesiredValue = $CoreTerminalProfile.guid
+        }
+    }
+    else {
+        Write-Warning "Skipping Terminal setting 'defaultProfile'; Could not find PowerShell Core profile"
+    }
+
+    $Manifest = ($Manifest | Sort-Object -Property SettingPath)
 
     $DiscrepantSettings = $Manifest | Where-Object { $_.CurrentValue -ne $_.DesiredValue }
     if (-Not $DiscrepantSettings) {
