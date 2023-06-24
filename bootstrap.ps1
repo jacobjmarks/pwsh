@@ -257,10 +257,10 @@ $Steps = @(
             $TargetAssetName = "$NerdFont.zip"
             $FontFileFilter = "* Nerd Font Complete Windows Compatible.ttf"
 
-            # download fonts archive
+            # get GitHub asset
             $Release = Invoke-RestMethod "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/$TargetRelease"
-            $Asset = $Release.assets | Where-Object { $_.name -eq $TargetAssetName }
-            if (-Not $Asset) {
+            $TargetAsset = $Release.assets | Where-Object { $_.name -eq $TargetAssetName }
+            if (-Not $TargetAsset) {
                 $AvailableFonts = $Release.assets | Where-Object { $_.name -like "*.zip" } `
                 | ForEach-Object { $_.name -replace ".zip", "" } | Join-String -Separator ", "
                 Write-Error -ErrorAction 'Continue' "Nerd Font '$NerdFont' not found. Expected one of: $AvailableFonts"
@@ -268,18 +268,24 @@ $Steps = @(
                 return
             }
 
+            # download fonts archive
             $TempDirectory = [System.IO.Path]::GetTempPath()
+            $AssetArchive = (Join-Path $TempDirectory "nerd-fonts-asset-$($TargetAsset.id).zip")
 
-            $TempFile = New-Item -ItemType File -Path $TempDirectory -Name "$(New-Guid).zip"
-            Invoke-RestMethod $Asset.browser_download_url -OutFile $TempFile
+            if (-Not (Test-Path $AssetArchive) -or (Get-Item $AssetArchive).Length -ne $TargetAsset.size) {
+                New-Item -ItemType File -Path $AssetArchive | Out-Null
+                Invoke-RestMethod $TargetAsset.browser_download_url -OutFile $AssetArchive
+            }
 
             # extract fonts archive
-            $TempFolder = New-Item -ItemType Directory -Path $TempDirectory -Name (New-Guid)
-            Expand-Archive $TempFile $TempFolder
+            $ExtractFolder = (Join-Path $TempDirectory ([System.IO.Path]::GetFileNameWithoutExtension($AssetArchive)))
+            if (Test-Path $ExtractFolder) { Remove-Item -Force -Recurse $ExtractFolder }
+            New-Item -ItemType Directory -Path $ExtractFolder | Out-Null
+            Expand-Archive $AssetArchive $ExtractFolder
 
             # install fonts
             $ShellApplication = New-Object -ComObject Shell.Application
-            $FontFiles = $ShellApplication.Namespace($TempFolder.FullName).Items()
+            $FontFiles = $ShellApplication.Namespace($ExtractFolder).Items()
             $FontFiles.Filter(0x40, $FontFileFilter)
             if ($FontFiles.Count -eq 0) {
                 throw "No files found within asset '$TargetAssetName' matching the filter '$FontFileFilter'"
