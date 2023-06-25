@@ -17,178 +17,74 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-if ($PSEdition -eq "Core" -and -not $IsWindows) {
-    Write-Error "This script does not support the current operating system."
-}
+$NON_TERMINATING_ERROR_COUNT = 0
+$TERMINAL_SETTINGS_FILE_PATH = (Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
+$NERD_FONT_FAMILY_NAME = $null
 
-if (-not (Get-Command winget -ErrorAction Ignore)) {
-    Write-Error "This script requires the Windows Package Manager (winget). Please refer to https://learn.microsoft.com/en-us/windows/package-manager/winget/#install-winget for installation options."
-}
+function Main {
+    if ($PSEdition -eq "Core" -and -not $IsWindows) {
+        Write-Error "This script does not support the current operating system."
+    }
 
-function Update-Path {
-    $env:Path = @(
-        [System.Environment]::GetEnvironmentVariable("Path", "Machine")
-        [System.Environment]::GetEnvironmentVariable("Path", "User")
-    ) -match '.' -join ';'
-}
+    if (-not (Get-Command winget -ErrorAction Ignore)) {
+        Write-Error "This script requires the Windows Package Manager (winget). Please refer to https://learn.microsoft.com/en-us/windows/package-manager/winget/#install-winget for installation options."
+    }
 
-function Get-Base64String {
-    param (
-        [Parameter(Mandatory)]
-        [string] $Value
-    )
+    if ($PSEdition -ne "Core") {
+        Write-Host "> Switching to PowerShell Core ..."
 
-    $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Value)
-    [Convert]::ToBase64String($Bytes)
-}
+        if (-not (Get-Command pwsh -ErrorAction Ignore)) {
+            winget install -e --id Microsoft.PowerShell --accept-source-agreements
+            Update-Path
+        }
 
-if ($PSEdition -ne "Core") {
-    Write-Host "> Switching to PowerShell Core ..."
+        if ($MyInvocation.InvocationName) {
+            pwsh -nop -wd $PWD -c $MyInvocation.InvocationName @PSBoundParameters
+        }
+        else {
+            pwsh -nop -wd $PWD -ec (Get-Base64String $MyInvocation.MyCommand.ToString())
+        }
 
-    if (-not (Get-Command pwsh -ErrorAction Ignore)) {
-        winget install -e --id Microsoft.PowerShell --accept-source-agreements
+        return
+    }
+
+    $Apps = [ordered]@{
+        "Windows Terminal" = "Microsoft.WindowsTerminal"
+        "PowerShell Core"  = "Microsoft.PowerShell"
+        "Git"              = "Git.Git"
+        "gsudo"            = "gerardog.gsudo"
+        "Oh My Posh"       = "XP8K0HKJFRXGCK"
+    }
+
+    $Modules = [ordered]@{
+        "Terminal-Icons" = "Terminal-Icons"
+        "posh-git"       = "posh-git"
+        "z"              = "z"
+    }
+
+    Write-Host "> Installing applications via winget ..."
+    $Apps.GetEnumerator() | ForEach-Object {
+        Write-Host "> Installing $($_.Name) ..."
+        winget install -e --id $_.Value --accept-source-agreements --accept-package-agreements
         Update-Path
     }
 
-    if ($MyInvocation.InvocationName) {
-        pwsh -nop -wd $PWD -c $MyInvocation.InvocationName @PSBoundParameters
+    Write-Host "> Installing PowerShell Core modules ..."
+    $Modules.GetEnumerator() | ForEach-Object {
+        Write-Host "> Installing $($_.Name) ..."
+        Install-OrUpdateModule $_.Value
+    }
+
+    Update-PowerShellProfile
+    Install-NerdFont
+
+    if ($NON_TERMINATING_ERROR_COUNT -gt 0) {
+        Write-Warning ("Bootstrapping completed with $NON_TERMINATING_ERROR_COUNT non-terminating errors. " `
+                + "It is recommended you resolve these errors and re-run the script.")
     }
     else {
-        pwsh -nop -wd $PWD -ec (Get-Base64String $MyInvocation.MyCommand.ToString())
-    }
-
-    return
-}
-
-$NON_TERMINATING_ERROR_COUNT = 0
-$TERMINAL_SETTINGS_FILE_PATH = (Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
-
-function Get-FontFamilyName {
-    param (
-        [Parameter(Mandatory)]
-        [string] $File
-    )
-
-    Add-Type -AssemblyName System.Drawing
-    $FontCollection = [System.Drawing.Text.PrivateFontCollection]::new()
-    try {
-        $FontCollection.AddFontFile($File)
-        $FontCollection.Families.Name
-    }
-    finally {
-        $FontCollection.Dispose()
-    }
-}
-
-function Initialize-TerminalSettings {
-    if (Test-Path $TERMINAL_SETTINGS_FILE_PATH) {
-        return
-    }
-
-    Write-Host "> Initializing Windows Terminal settings ..."
-
-    wt --version # Starts a new Terminal process
-
-    # Wait for the Terminal process to initialise its settings file, then terminate
-    $LatestWindowsTerminalProcess = @(Get-Process -Name WindowsTerminal -ErrorAction Ignore) | Sort-Object -Property StartTime | Select-Object -Last 1
-    while (-not (Test-Path $TERMINAL_SETTINGS_FILE_PATH)) {
-        Start-Sleep -Milliseconds 50
-    }
-    $LatestWindowsTerminalProcess | Stop-Process
-}
-
-function Update-TerminalSettings {
-    Initialize-TerminalSettings
-
-    Write-Host "> Checking Windows Terminal settings ..."
-    $TerminalSettings = Get-Content $TERMINAL_SETTINGS_FILE_PATH | ConvertFrom-Json
-
-    $Manifest = @(
-        @{
-            SettingPath  = "profiles.defaults.colorScheme"
-            CurrentValue = $TerminalSettings.profiles.defaults.colorScheme
-            DesiredValue = "One Half Dark"
-        }
-        @{
-            SettingPath  = "profiles.defaults.font.face"
-            CurrentValue = $TerminalSettings.profiles.defaults.font.face
-            DesiredValue = "$NerdFontFamilyName"
-        }
-        @{
-            SettingPath  = "profiles.defaults.opacity"
-            CurrentValue = $TerminalSettings.profiles.defaults.opacity
-            DesiredValue = 75
-        }
-        @{
-            SettingPath  = "profiles.defaults.useAcrylic"
-            CurrentValue = $TerminalSettings.profiles.defaults.useAcrylic
-            DesiredValue = $true
-        }
-        @{
-            SettingPath  = "useAcrylicInTabRow"
-            CurrentValue = $TerminalSettings.useAcrylicInTabRow
-            DesiredValue = $true
-        }
-    )
-
-    $CoreTerminalProfile = $TerminalSettings.profiles.list | Where-Object { $_.source -eq "Windows.Terminal.PowershellCore" } | Select-Object -First 1
-    if ($CoreTerminalProfile) {
-        $Manifest += @{
-            SettingPath  = "defaultProfile"
-            CurrentValue = $TerminalSettings.defaultProfile
-            DesiredValue = $CoreTerminalProfile.guid
-        }
-    }
-    else {
-        Write-Warning "Skipping Terminal setting 'defaultProfile'; Could not find PowerShell Core profile"
-    }
-
-    $Manifest = ($Manifest | Sort-Object -Property SettingPath)
-
-    $DiscrepantSettings = $Manifest | Where-Object { $_.CurrentValue -ne $_.DesiredValue }
-    if (-not $DiscrepantSettings) {
-        return
-    }
-
-    foreach ($Entry in $DiscrepantSettings) {
-        Write-Host "    $($Entry.SettingPath) = $(if($Entry.CurrentValue){$Entry.CurrentValue}else{"NULL"}) -> $($Entry.DesiredValue)"
-    }
-
-    if ($Host.UI.PromptForChoice($null, "Update Windows Terminal settings as above? (recommended)", @("&Yes", "&No"), 1) -ne 0) {
-        return
-    }
-
-    foreach ($Entry in $DiscrepantSettings) {
-        $Segments = $Entry.SettingPath -split "\."
-
-        # hydrate
-        $Ptr = $TerminalSettings
-        foreach ($Segment in ($Segments | Select-Object -SkipLast 1)) {
-            if (-not $Ptr."$Segment") {
-                $Ptr | Add-Member -notePropertyName $Segment -notePropertyValue ([PSCustomObject]@{})
-            }
-            $Ptr = $Ptr."$Segment"
-        }
-
-        # set desired value
-        $Ptr | Add-Member -notePropertyName ($Segments | Select-Object -Last 1) -notePropertyValue $Entry.DesiredValue -Force
-    }
-
-    $TerminalSettings | ConvertTo-Json -Depth 100 | Out-File $TERMINAL_SETTINGS_FILE_PATH -Encoding utf8
-    Write-Host "> Updated: $TERMINAL_SETTINGS_FILE_PATH"
-}
-
-function Install-OrUpdateModule {
-    param (
-        [Parameter(Mandatory)]
-        [string] $Name
-    )
-
-    if (-not (Get-InstalledModule $Name -ErrorAction Ignore)) {
-        Install-Module $Name -Force
-    }
-    else {
-        Update-Module $Name
+        Update-TerminalSettings
+        Write-Host "> Bootstrapping Complete!"
     }
 }
 
@@ -273,49 +169,154 @@ function Install-NerdFont {
     if ($FontFiles.Count -eq 0) {
         throw "No files found within asset '$TargetAssetName' matching the filter '$FontFileFilter'"
     }
-    $script:NerdFontFamilyName = Get-FontFamilyName ($FontFiles | Select-Object -First 1).Path
+    $Script:NERD_FONT_FAMILY_NAME = Get-FontFamilyName ($FontFiles | Select-Object -First 1).Path
     $FontsFolder = $ShellApplication.Namespace(0x14)
     $FontsFolder.CopyHere($FontFiles)
 }
 
-function Main {
-    $Apps = [ordered]@{
-        "Windows Terminal" = "Microsoft.WindowsTerminal"
-        "PowerShell Core"  = "Microsoft.PowerShell"
-        "Git"              = "Git.Git"
-        "gsudo"            = "gerardog.gsudo"
-        "Oh My Posh"       = "XP8K0HKJFRXGCK"
+function Get-FontFamilyName {
+    param (
+        [Parameter(Mandatory)]
+        [string] $File
+    )
+
+    Add-Type -AssemblyName System.Drawing
+    $FontCollection = [System.Drawing.Text.PrivateFontCollection]::new()
+    try {
+        $FontCollection.AddFontFile($File)
+        $FontCollection.Families.Name
+    }
+    finally {
+        $FontCollection.Dispose()
+    }
+}
+
+function Initialize-TerminalSettings {
+    if (Test-Path $TERMINAL_SETTINGS_FILE_PATH) {
+        return
     }
 
-    $Modules = [ordered]@{
-        "Terminal-Icons" = "Terminal-Icons"
-        "posh-git"       = "posh-git"
-        "z"              = "z"
+    Write-Host "> Initializing Windows Terminal settings ..."
+
+    wt --version # Starts a new Terminal process
+
+    # Wait for the Terminal process to initialise its settings file, then terminate
+    $LatestWindowsTerminalProcess = @(Get-Process -Name WindowsTerminal -ErrorAction Ignore) | Sort-Object -Property StartTime | Select-Object -Last 1
+    while (-not (Test-Path $TERMINAL_SETTINGS_FILE_PATH)) {
+        Start-Sleep -Milliseconds 50
     }
+    $LatestWindowsTerminalProcess | Stop-Process
+}
 
-    Write-Host "> Installing applications via winget ..."
-    $Apps.GetEnumerator() | ForEach-Object {
-        Write-Host "> Installing $($_.Name) ..."
-        winget install -e --id $_.Value --accept-source-agreements --accept-package-agreements
-        Update-Path
-    }
+function Update-TerminalSettings {
+    Initialize-TerminalSettings
 
-    Write-Host "> Installing PowerShell Core modules ..."
-    $Modules.GetEnumerator() | ForEach-Object {
-        Write-Host "> Installing $($_.Name) ..."
-        Install-OrUpdateModule $_.Value
-    }
+    Write-Host "> Checking Windows Terminal settings ..."
+    $TerminalSettings = Get-Content $TERMINAL_SETTINGS_FILE_PATH | ConvertFrom-Json
 
-    Update-PowerShellProfile
-    Install-NerdFont
+    $Manifest = @(
+        @{
+            SettingPath  = "profiles.defaults.colorScheme"
+            CurrentValue = $TerminalSettings.profiles.defaults.colorScheme
+            DesiredValue = "One Half Dark"
+        }
+        @{
+            SettingPath  = "profiles.defaults.font.face"
+            CurrentValue = $TerminalSettings.profiles.defaults.font.face
+            DesiredValue = "$NERD_FONT_FAMILY_NAME"
+        }
+        @{
+            SettingPath  = "profiles.defaults.opacity"
+            CurrentValue = $TerminalSettings.profiles.defaults.opacity
+            DesiredValue = 75
+        }
+        @{
+            SettingPath  = "profiles.defaults.useAcrylic"
+            CurrentValue = $TerminalSettings.profiles.defaults.useAcrylic
+            DesiredValue = $true
+        }
+        @{
+            SettingPath  = "useAcrylicInTabRow"
+            CurrentValue = $TerminalSettings.useAcrylicInTabRow
+            DesiredValue = $true
+        }
+    )
 
-    if ($NON_TERMINATING_ERROR_COUNT -gt 0) {
-        Write-Warning ("Bootstrapping completed with $NON_TERMINATING_ERROR_COUNT non-terminating errors. " `
-                + "It is recommended you resolve these errors and re-run the script.")
+    $CoreTerminalProfile = $TerminalSettings.profiles.list | Where-Object { $_.source -eq "Windows.Terminal.PowershellCore" } | Select-Object -First 1
+    if ($CoreTerminalProfile) {
+        $Manifest += @{
+            SettingPath  = "defaultProfile"
+            CurrentValue = $TerminalSettings.defaultProfile
+            DesiredValue = $CoreTerminalProfile.guid
+        }
     }
     else {
-        Update-TerminalSettings
-        Write-Host "> Bootstrapping Complete!"
+        Write-Warning "Skipping Terminal setting 'defaultProfile'; Could not find PowerShell Core profile"
+    }
+
+    $Manifest = ($Manifest | Sort-Object -Property SettingPath)
+
+    $DiscrepantSettings = $Manifest | Where-Object { $_.CurrentValue -ne $_.DesiredValue }
+    if (-not $DiscrepantSettings) {
+        return
+    }
+
+    foreach ($Entry in $DiscrepantSettings) {
+        Write-Host "    $($Entry.SettingPath) = $(if($Entry.CurrentValue){$Entry.CurrentValue}else{"NULL"}) -> $($Entry.DesiredValue)"
+    }
+
+    if ($Host.UI.PromptForChoice($null, "Update Windows Terminal settings as above? (recommended)", @("&Yes", "&No"), 1) -ne 0) {
+        return
+    }
+
+    foreach ($Entry in $DiscrepantSettings) {
+        $Segments = $Entry.SettingPath -split "\."
+
+        # hydrate
+        $Ptr = $TerminalSettings
+        foreach ($Segment in ($Segments | Select-Object -SkipLast 1)) {
+            if (-not $Ptr."$Segment") {
+                $Ptr | Add-Member -notePropertyName $Segment -notePropertyValue ([PSCustomObject]@{})
+            }
+            $Ptr = $Ptr."$Segment"
+        }
+
+        # set desired value
+        $Ptr | Add-Member -notePropertyName ($Segments | Select-Object -Last 1) -notePropertyValue $Entry.DesiredValue -Force
+    }
+
+    $TerminalSettings | ConvertTo-Json -Depth 100 | Out-File $TERMINAL_SETTINGS_FILE_PATH -Encoding utf8
+    Write-Host "> Updated: $TERMINAL_SETTINGS_FILE_PATH"
+}
+
+function Update-Path {
+    $env:Path = @(
+        [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+        [System.Environment]::GetEnvironmentVariable("Path", "User")
+    ) -match '.' -join ';'
+}
+
+function Get-Base64String {
+    param (
+        [Parameter(Mandatory)]
+        [string] $Value
+    )
+
+    $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Value)
+    [Convert]::ToBase64String($Bytes)
+}
+
+function Install-OrUpdateModule {
+    param (
+        [Parameter(Mandatory)]
+        [string] $Name
+    )
+
+    if (-not (Get-InstalledModule $Name -ErrorAction Ignore)) {
+        Install-Module $Name -Force
+    }
+    else {
+        Update-Module $Name
     }
 }
 
