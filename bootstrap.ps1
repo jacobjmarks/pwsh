@@ -17,6 +17,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$ROOT_INVOCATION = $MyInvocation
 $NON_TERMINATING_ERROR_COUNT = 0
 $TERMINAL_SETTINGS_FILE_PATH = (Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
 $NERD_FONT_FAMILY_NAME = $null
@@ -38,11 +39,11 @@ function Main {
             Update-Path
         }
 
-        if ($MyInvocation.InvocationName) {
-            pwsh -nop -wd $PWD -c $MyInvocation.InvocationName @PSBoundParameters
+        if ($ROOT_INVOCATION.InvocationName) {
+            pwsh -NoExit -nop -wd $PWD -c $ROOT_INVOCATION.InvocationName @PSBoundParameters
         }
         else {
-            pwsh -nop -wd $PWD -ec (Get-Base64String $MyInvocation.MyCommand.ToString())
+            pwsh -NoExit -nop -wd $PWD -ec (Get-Base64String $ROOT_INVOCATION.MyCommand.ToString())
         }
 
         return
