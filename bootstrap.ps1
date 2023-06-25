@@ -38,6 +38,7 @@ function Invoke-WithCore {
 
     if ($PSEdition -ne 'Core') {
         pwsh -NoProfile -c $ScriptBlock
+        if ($LASTEXITCODE -ne 0) { exit }
     }
     else {
         Invoke-Command -NoNewScope $ScriptBlock
