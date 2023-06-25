@@ -22,7 +22,7 @@ $NON_TERMINATING_ERROR_COUNT = 0
 $TERMINAL_SETTINGS_FILE_PATH = (Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
 $NERD_FONT_FAMILY_NAME = $null
 
-function Main {
+function Start-Main {
     if ($PSEdition -eq "Core" -and -not $IsWindows) {
         Write-Error "This script does not support the current operating system."
     }
@@ -321,4 +321,4 @@ function Install-OrUpdateModule {
     }
 }
 
-Main
+Start-Main
