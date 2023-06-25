@@ -16,6 +16,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if (-Not (Get-Command winget -ErrorAction Ignore)) {
+    Write-Error "This script requires the Windows Package Manager (winget). Please refer to https://learn.microsoft.com/en-us/windows/package-manager/winget/#install-winget for installation options."
+}
+
 $NonTerminatingErrorCount = 0
 $WindowsTerminalSettingsFile = (Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
 
