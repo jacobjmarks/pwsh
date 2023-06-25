@@ -21,7 +21,7 @@ if ($PSEdition -eq "Core" -and -not $IsWindows) {
     Write-Error "This script does not support the current operating system."
 }
 
-if (-Not (Get-Command winget -ErrorAction Ignore)) {
+if (-not (Get-Command winget -ErrorAction Ignore)) {
     Write-Error "This script requires the Windows Package Manager (winget). Please refer to https://learn.microsoft.com/en-us/windows/package-manager/winget/#install-winget for installation options."
 }
 
@@ -33,16 +33,19 @@ function Update-Path {
 }
 
 function Get-Base64String {
-    param ([Parameter(Mandatory)][string] $Value)
+    param (
+        [Parameter(Mandatory)]
+        [string] $Value
+    )
 
     $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Value)
     [Convert]::ToBase64String($Bytes)
 }
 
 if ($PSEdition -ne "Core") {
-    Write-Host "Switching to PowerShell Core ..."
+    Write-Host "> Switching to PowerShell Core ..."
 
-    if (-Not (Get-Command pwsh -ErrorAction Ignore)) {
+    if (-not (Get-Command pwsh -ErrorAction Ignore)) {
         winget install -e --id Microsoft.PowerShell --accept-source-agreements
         Update-Path
     }
@@ -57,8 +60,8 @@ if ($PSEdition -ne "Core") {
     return
 }
 
-$NonTerminatingErrorCount = 0
-$WindowsTerminalSettingsFile = (Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
+$NON_TERMINATING_ERROR_COUNT = 0
+$TERMINAL_SETTINGS_FILE_PATH = (Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
 
 function Get-FontFamilyName {
     param (
@@ -78,7 +81,7 @@ function Get-FontFamilyName {
 }
 
 function Initialize-TerminalSettings {
-    if (Test-Path $WindowsTerminalSettingsFile) {
+    if (Test-Path $TERMINAL_SETTINGS_FILE_PATH) {
         return
     }
 
@@ -88,7 +91,7 @@ function Initialize-TerminalSettings {
 
     # Wait for the Terminal process to initialise its settings file, then terminate
     $LatestWindowsTerminalProcess = @(Get-Process -Name WindowsTerminal -ErrorAction Ignore) | Sort-Object -Property StartTime | Select-Object -Last 1
-    while (-Not (Test-Path $WindowsTerminalSettingsFile)) {
+    while (-not (Test-Path $TERMINAL_SETTINGS_FILE_PATH)) {
         Start-Sleep -Milliseconds 50
     }
     $LatestWindowsTerminalProcess | Stop-Process
@@ -98,7 +101,7 @@ function Update-TerminalSettings {
     Initialize-TerminalSettings
 
     Write-Host "> Checking Windows Terminal settings ..."
-    $TerminalSettings = Get-Content $WindowsTerminalSettingsFile | ConvertFrom-Json
+    $TerminalSettings = Get-Content $TERMINAL_SETTINGS_FILE_PATH | ConvertFrom-Json
 
     $Manifest = @(
         @{
@@ -143,7 +146,7 @@ function Update-TerminalSettings {
     $Manifest = ($Manifest | Sort-Object -Property SettingPath)
 
     $DiscrepantSettings = $Manifest | Where-Object { $_.CurrentValue -ne $_.DesiredValue }
-    if (-Not $DiscrepantSettings) {
+    if (-not $DiscrepantSettings) {
         return
     }
 
@@ -161,18 +164,18 @@ function Update-TerminalSettings {
         # hydrate
         $Ptr = $TerminalSettings
         foreach ($Segment in ($Segments | Select-Object -SkipLast 1)) {
-            if (-Not $Ptr."$Segment") {
-                $Ptr | Add-Member -NotePropertyName $Segment -NotePropertyValue ([PSCustomObject]@{})
+            if (-not $Ptr."$Segment") {
+                $Ptr | Add-Member -notePropertyName $Segment -notePropertyValue ([PSCustomObject]@{})
             }
             $Ptr = $Ptr."$Segment"
         }
 
         # set desired value
-        $Ptr | Add-Member -NotePropertyName ($Segments | Select-Object -Last 1) -NotePropertyValue $Entry.DesiredValue -Force
+        $Ptr | Add-Member -notePropertyName ($Segments | Select-Object -Last 1) -notePropertyValue $Entry.DesiredValue -Force
     }
 
-    $TerminalSettings | ConvertTo-Json -Depth 100 | Out-File $WindowsTerminalSettingsFile -Encoding utf8
-    Write-Host "> Updated: $WindowsTerminalSettingsFile"
+    $TerminalSettings | ConvertTo-Json -Depth 100 | Out-File $TERMINAL_SETTINGS_FILE_PATH -Encoding utf8
+    Write-Host "> Updated: $TERMINAL_SETTINGS_FILE_PATH"
 }
 
 function Install-OrUpdateModule {
@@ -181,7 +184,7 @@ function Install-OrUpdateModule {
         [string] $Name
     )
 
-    if (-Not (Get-InstalledModule $Name -ErrorAction Ignore)) {
+    if (-not (Get-InstalledModule $Name -ErrorAction Ignore)) {
         Install-Module $Name -Force
     }
     else {
@@ -194,11 +197,11 @@ function Update-PowerShellProfile {
 
     $PoshThemesPath = [System.Environment]::GetEnvironmentVariable("POSH_THEMES_PATH", "User")
     $ThemeFile = [System.IO.FileInfo](Join-Path $PoshThemesPath "$Theme.omp.json")
-    if (-Not $ThemeFile.Exists) {
+    if (-not $ThemeFile.Exists) {
         $AvailableThemes = Get-ChildItem $PoshThemesPath -Filter "*.omp.json" `
         | ForEach-Object { $_.Name -replace ".omp.json", "" } | Join-String -Separator ", "
         Write-Error -ErrorAction 'Continue' "Oh My Posh theme '$Theme' not found. Expected one of: $AvailableThemes"
-        $Script:NonTerminatingErrorCount++
+        $Script:NON_TERMINATING_ERROR_COUNT++
         return
     }
 
@@ -240,11 +243,11 @@ function Install-NerdFont {
     # get GitHub asset
     $Release = Invoke-RestMethod "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/$TargetRelease"
     $TargetAsset = $Release.assets | Where-Object { $_.name -eq $TargetAssetName }
-    if (-Not $TargetAsset) {
+    if (-not $TargetAsset) {
         $AvailableFonts = $Release.assets | Where-Object { $_.name -like "*.zip" } `
         | ForEach-Object { $_.name -replace ".zip", "" } | Join-String -Separator ", "
         Write-Error -ErrorAction 'Continue' "Nerd Font '$NerdFont' not found. Expected one of: $AvailableFonts"
-        $Script:NonTerminatingErrorCount++
+        $Script:NON_TERMINATING_ERROR_COUNT++
         return
     }
 
@@ -252,7 +255,7 @@ function Install-NerdFont {
     $TempDirectory = [System.IO.Path]::GetTempPath()
     $AssetArchive = (Join-Path $TempDirectory "nerd-fonts-asset-$($TargetAsset.id).zip")
 
-    if (-Not (Test-Path $AssetArchive) -or (Get-Item $AssetArchive).Length -ne $TargetAsset.size) {
+    if (-not (Test-Path $AssetArchive) -or (Get-Item $AssetArchive).Length -ne $TargetAsset.size) {
         New-Item -ItemType File -Path $AssetArchive | Out-Null
         Invoke-RestMethod $TargetAsset.browser_download_url -OutFile $AssetArchive
     }
@@ -306,8 +309,8 @@ function Main {
     Update-PowerShellProfile
     Install-NerdFont
 
-    if ($NonTerminatingErrorCount -gt 0) {
-        Write-Warning ("Bootstrapping completed with $NonTerminatingErrorCount non-terminating errors. " `
+    if ($NON_TERMINATING_ERROR_COUNT -gt 0) {
+        Write-Warning ("Bootstrapping completed with $NON_TERMINATING_ERROR_COUNT non-terminating errors. " `
                 + "It is recommended you resolve these errors and re-run the script.")
     }
     else {
