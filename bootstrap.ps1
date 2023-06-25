@@ -3,6 +3,7 @@
         Windows PowerShell Core bootstrapper
 #>
 
+[CmdletBinding()]
 param(
     # Oh My Posh theme to configure for use
     [string] $Theme = "paradox",
@@ -16,12 +17,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ($PSEdition -eq "Core" -and -not $IsWindows) {
+    Write-Error "This script does not support the current operating system."
+}
+
 if (-Not (Get-Command winget -ErrorAction Ignore)) {
     Write-Error "This script requires the Windows Package Manager (winget). Please refer to https://learn.microsoft.com/en-us/windows/package-manager/winget/#install-winget for installation options."
 }
-
-$NonTerminatingErrorCount = 0
-$WindowsTerminalSettingsFile = (Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
 
 function Update-Path {
     $env:Path = @(
@@ -30,20 +32,33 @@ function Update-Path {
     ) -match '.' -join ';'
 }
 
-function Invoke-WithCore {
-    param (
-        [Parameter(Mandatory)]
-        [ScriptBlock] $ScriptBlock
-    )
+function Get-Base64String {
+    param ([Parameter(Mandatory)][string] $Value)
 
-    if ($PSEdition -ne 'Core') {
-        pwsh -NoProfile -c $ScriptBlock
-        if ($LASTEXITCODE -ne 0) { exit }
+    $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Value)
+    [Convert]::ToBase64String($Bytes)
+}
+
+if ($PSEdition -ne "Core") {
+    Write-Host "Switching to PowerShell Core ..."
+
+    if (-Not (Get-Command pwsh -ErrorAction Ignore)) {
+        winget install -e --id Microsoft.PowerShell --accept-source-agreements
+        Update-Path
+    }
+
+    if ($MyInvocation.InvocationName) {
+        pwsh -nop -wd $PWD -c $MyInvocation.InvocationName @PSBoundParameters
     }
     else {
-        Invoke-Command -NoNewScope $ScriptBlock
+        pwsh -nop -wd $PWD -ec (Get-Base64String $MyInvocation.MyCommand.ToString())
     }
+
+    return
 }
+
+$NonTerminatingErrorCount = 0
+$WindowsTerminalSettingsFile = (Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
 
 function Get-FontFamilyName {
     param (
@@ -160,18 +175,25 @@ function Update-TerminalSettings {
     Write-Host "> Updated: $WindowsTerminalSettingsFile"
 }
 
+function Install-OrUpdateModule {
+    param (
+        [Parameter(Mandatory)]
+        [string] $Name
+    )
+
+    if (-Not (Get-InstalledModule $Name -ErrorAction Ignore)) {
+        Install-Module $Name -Force
+    }
+    else {
+        Update-Module $Name
+    }
+}
+
 $Steps = @(
     @{
         Descriptor  = "Installing Windows Terminal"
         ScriptBlock = {
             winget install --accept-source-agreements --accept-package-agreements -e --id Microsoft.WindowsTerminal
-            Update-Path
-        }
-    }
-    @{
-        Descriptor  = "Installing PowerShell"
-        ScriptBlock = {
-            winget install --accept-source-agreements --accept-package-agreements -e --id Microsoft.PowerShell
             Update-Path
         }
     }
@@ -199,43 +221,19 @@ $Steps = @(
     @{
         Descriptor  = "Installing Terminal-Icons"
         ScriptBlock = {
-            Invoke-WithCore {
-                $ModuleName = "Terminal-Icons"
-                if (-Not (Get-InstalledModule $ModuleName -ErrorAction Ignore)) {
-                    Install-Module $ModuleName -Force
-                }
-                else {
-                    Update-Module $ModuleName
-                }
-            }
+            Install-OrUpdateModule Terminal-Icons
         }
     }
     @{
         Descriptor  = "Installing posh-git"
         ScriptBlock = {
-            Invoke-WithCore {
-                $ModuleName = "posh-git"
-                if (-Not (Get-InstalledModule $ModuleName -ErrorAction Ignore)) {
-                    Install-Module $ModuleName -Force
-                }
-                else {
-                    Update-Module $ModuleName
-                }
-            }
+            Install-OrUpdateModule posh-git
         }
     }
     @{
         Descriptor  = "Installing z"
         ScriptBlock = {
-            Invoke-WithCore {
-                $ModuleName = "z"
-                if (-Not (Get-InstalledModule $ModuleName -ErrorAction Ignore)) {
-                    Install-Module $ModuleName -Force
-                }
-                else {
-                    Update-Module $ModuleName
-                }
-            }
+            Install-OrUpdateModule z
         }
     }
     @{
@@ -261,17 +259,15 @@ $Steps = @(
                 Set-PSReadLineOption -PredictionViewStyle ListView
             }.ToString() -replace "{{THEME_FILE_NAME}}", $ThemeFile.Name
 
-            $PwshProfile = Invoke-WithCore { $PROFILE }
-
-            if ((Test-Path $PwshProfile) -and (Get-Content $PwshProfile).Trim().Length -gt 0) {
-                Write-Warning "Your PowerShell profile is not empty.`n$PwshProfile"
+            if ((Test-Path $PROFILE) -and (Get-Content $PROFILE).Trim().Length -gt 0) {
+                Write-Warning "Your PowerShell profile is not empty.`n$PROFILE"
                 if ($Host.UI.PromptForChoice($null, "Overwrite?", @("&Yes", "&No"), 1) -ne 0) {
                     return
                 }
             }
 
-            $ProfileScript.Trim() -replace "                ", "" | Out-File $PwshProfile -Encoding utf8
-            Write-Host "> Updated: $PwshProfile"
+            $ProfileScript.Trim() -replace "                ", "" | Out-File $PROFILE -Encoding utf8
+            Write-Host "> Updated: $PROFILE"
         }
     }
     @{
