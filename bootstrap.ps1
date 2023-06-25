@@ -164,54 +164,78 @@ $Steps = @(
     @{
         Descriptor  = "Installing Windows Terminal"
         ScriptBlock = {
-            winget install -e --id Microsoft.WindowsTerminal
+            winget install --accept-source-agreements --accept-package-agreements -e --id Microsoft.WindowsTerminal
             Update-Path
         }
     }
     @{
         Descriptor  = "Installing PowerShell"
         ScriptBlock = {
-            winget install -e --id Microsoft.PowerShell
+            winget install --accept-source-agreements --accept-package-agreements -e --id Microsoft.PowerShell
             Update-Path
         }
     }
     @{
         Descriptor  = "Installing Git"
         ScriptBlock = {
-            winget install -e --id Git.Git
+            winget install --accept-source-agreements --accept-package-agreements -e --id Git.Git
             Update-Path
         }
     }
     @{
         Descriptor  = "Installing gsudo"
         ScriptBlock = {
-            winget install -e --id gerardog.gsudo
+            winget install --accept-source-agreements --accept-package-agreements -e --id gerardog.gsudo
             Update-Path
         }
     }
     @{
         Descriptor  = "Installing Oh My Posh"
         ScriptBlock = {
-            winget install -e --id XP8K0HKJFRXGCK # via Microsoft Store
+            winget install --accept-source-agreements --accept-package-agreements -e --id XP8K0HKJFRXGCK # via Microsoft Store
             Update-Path
         }
     }
     @{
         Descriptor  = "Installing Terminal-Icons"
         ScriptBlock = {
-            Invoke-WithCore { Install-Module Terminal-Icons }
+            Invoke-WithCore {
+                $ModuleName = "Terminal-Icons"
+                if (-Not (Get-InstalledModule $ModuleName -ErrorAction Ignore)) {
+                    Install-Module $ModuleName -Force
+                }
+                else {
+                    Update-Module $ModuleName
+                }
+            }
         }
     }
     @{
         Descriptor  = "Installing posh-git"
         ScriptBlock = {
-            Invoke-WithCore { Install-Module posh-git }
+            Invoke-WithCore {
+                $ModuleName = "posh-git"
+                if (-Not (Get-InstalledModule $ModuleName -ErrorAction Ignore)) {
+                    Install-Module $ModuleName -Force
+                }
+                else {
+                    Update-Module $ModuleName
+                }
+            }
         }
     }
     @{
         Descriptor  = "Installing z"
         ScriptBlock = {
-            Invoke-WithCore { Install-Module z }
+            Invoke-WithCore {
+                $ModuleName = "z"
+                if (-Not (Get-InstalledModule $ModuleName -ErrorAction Ignore)) {
+                    Install-Module $ModuleName -Force
+                }
+                else {
+                    Update-Module $ModuleName
+                }
+            }
         }
     }
     @{
