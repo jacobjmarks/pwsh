@@ -189,153 +189,131 @@ function Install-OrUpdateModule {
     }
 }
 
-$Steps = @(
-    @{
-        Descriptor  = "Installing Windows Terminal"
-        ScriptBlock = {
-            winget install --accept-source-agreements --accept-package-agreements -e --id Microsoft.WindowsTerminal
-            Update-Path
+function Update-PowerShellProfile {
+    Write-Host "> Configuring PowerShell Core profile ..."
+
+    $PoshThemesPath = [System.Environment]::GetEnvironmentVariable("POSH_THEMES_PATH", "User")
+    $ThemeFile = [System.IO.FileInfo](Join-Path $PoshThemesPath "$Theme.omp.json")
+    if (-Not $ThemeFile.Exists) {
+        $AvailableThemes = Get-ChildItem $PoshThemesPath -Filter "*.omp.json" `
+        | ForEach-Object { $_.Name -replace ".omp.json", "" } | Join-String -Separator ", "
+        Write-Error -ErrorAction 'Continue' "Oh My Posh theme '$Theme' not found. Expected one of: $AvailableThemes"
+        $Script:NonTerminatingErrorCount++
+        return
+    }
+
+    $ProfileScript = {
+        Import-Module posh-git
+        Import-Module Terminal-Icons
+
+        oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\{{THEME_FILE_NAME}}" | Invoke-Expression
+
+        Set-PSReadLineOption -PredictionSource History
+        Set-PSReadLineOption -PredictionViewStyle ListView
+    }.ToString() -replace "{{THEME_FILE_NAME}}", $ThemeFile.Name
+
+    $PwshProfile = pwsh -nop -c { $PROFILE }
+
+    if ((Test-Path $PwshProfile) -and (Get-Content $PwshProfile).Trim().Length -gt 0) {
+        Write-Warning "Your PowerShell profile is not empty.`n$PwshProfile"
+        if ($Host.UI.PromptForChoice($null, "Overwrite?", @("&Yes", "&No"), 1) -ne 0) {
+            return
         }
     }
-    @{
-        Descriptor  = "Installing Git"
-        ScriptBlock = {
-            winget install --accept-source-agreements --accept-package-agreements -e --id Git.Git
-            Update-Path
-        }
-    }
-    @{
-        Descriptor  = "Installing gsudo"
-        ScriptBlock = {
-            winget install --accept-source-agreements --accept-package-agreements -e --id gerardog.gsudo
-            Update-Path
-        }
-    }
-    @{
-        Descriptor  = "Installing Oh My Posh"
-        ScriptBlock = {
-            winget install --accept-source-agreements --accept-package-agreements -e --id XP8K0HKJFRXGCK # via Microsoft Store
-            Update-Path
-        }
-    }
-    @{
-        Descriptor  = "Installing Terminal-Icons"
-        ScriptBlock = {
-            Install-OrUpdateModule Terminal-Icons
-        }
-    }
-    @{
-        Descriptor  = "Installing posh-git"
-        ScriptBlock = {
-            Install-OrUpdateModule posh-git
-        }
-    }
-    @{
-        Descriptor  = "Installing z"
-        ScriptBlock = {
-            Install-OrUpdateModule z
-        }
-    }
-    @{
-        Descriptor  = "Configuring PowerShell profile"
-        ScriptBlock = {
-            $PoshThemesPath = [System.Environment]::GetEnvironmentVariable("POSH_THEMES_PATH", "User")
-            $ThemeFile = [System.IO.FileInfo](Join-Path $PoshThemesPath "$Theme.omp.json")
-            if (-Not $ThemeFile.Exists) {
-                $AvailableThemes = Get-ChildItem $PoshThemesPath -Filter "*.omp.json" `
-                | ForEach-Object { $_.Name -replace ".omp.json", "" } | Join-String -Separator ", "
-                Write-Error -ErrorAction 'Continue' "Oh My Posh theme '$Theme' not found. Expected one of: $AvailableThemes"
-                $Script:NonTerminatingErrorCount++
-                return
-            }
 
-            $ProfileScript = {
-                Import-Module posh-git
-                Import-Module Terminal-Icons
-
-                oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\{{THEME_FILE_NAME}}" | Invoke-Expression
-
-                Set-PSReadLineOption -PredictionSource History
-                Set-PSReadLineOption -PredictionViewStyle ListView
-            }.ToString() -replace "{{THEME_FILE_NAME}}", $ThemeFile.Name
-
-            if ((Test-Path $PROFILE) -and (Get-Content $PROFILE).Trim().Length -gt 0) {
-                Write-Warning "Your PowerShell profile is not empty.`n$PROFILE"
-                if ($Host.UI.PromptForChoice($null, "Overwrite?", @("&Yes", "&No"), 1) -ne 0) {
-                    return
-                }
-            }
-
-            $ProfileScript.Trim() -replace "                ", "" | Out-File $PROFILE -Encoding utf8
-            Write-Host "> Updated: $PROFILE"
-        }
-    }
-    @{
-        Descriptor  = "Installing font: $NerdFont Nerd Font"
-        ScriptBlock = {
-            if ($NoFonts) {
-                Write-Warning "Skipping step."
-                return
-            }
-
-            $TargetRelease = "tags/v2.3.3"
-            $TargetAssetName = "$NerdFont.zip"
-            $FontFileFilter = "* Nerd Font Complete Windows Compatible.ttf"
-
-            # get GitHub asset
-            $Release = Invoke-RestMethod "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/$TargetRelease"
-            $TargetAsset = $Release.assets | Where-Object { $_.name -eq $TargetAssetName }
-            if (-Not $TargetAsset) {
-                $AvailableFonts = $Release.assets | Where-Object { $_.name -like "*.zip" } `
-                | ForEach-Object { $_.name -replace ".zip", "" } | Join-String -Separator ", "
-                Write-Error -ErrorAction 'Continue' "Nerd Font '$NerdFont' not found. Expected one of: $AvailableFonts"
-                $Script:NonTerminatingErrorCount++
-                return
-            }
-
-            # download fonts archive
-            $TempDirectory = [System.IO.Path]::GetTempPath()
-            $AssetArchive = (Join-Path $TempDirectory "nerd-fonts-asset-$($TargetAsset.id).zip")
-
-            if (-Not (Test-Path $AssetArchive) -or (Get-Item $AssetArchive).Length -ne $TargetAsset.size) {
-                New-Item -ItemType File -Path $AssetArchive | Out-Null
-                Invoke-RestMethod $TargetAsset.browser_download_url -OutFile $AssetArchive
-            }
-
-            # extract fonts archive
-            $ExtractFolder = (Join-Path $TempDirectory ([System.IO.Path]::GetFileNameWithoutExtension($AssetArchive)))
-            if (Test-Path $ExtractFolder) { Remove-Item -Force -Recurse $ExtractFolder }
-            New-Item -ItemType Directory -Path $ExtractFolder | Out-Null
-            Expand-Archive $AssetArchive $ExtractFolder
-
-            # install fonts
-            $ShellApplication = New-Object -ComObject Shell.Application
-            $FontFiles = $ShellApplication.Namespace($ExtractFolder).Items()
-            $FontFiles.Filter(0x40, $FontFileFilter)
-            if ($FontFiles.Count -eq 0) {
-                throw "No files found within asset '$TargetAssetName' matching the filter '$FontFileFilter'"
-            }
-            $script:NerdFontFamilyName = Get-FontFamilyName ($FontFiles | Select-Object -First 1).Path
-            $FontsFolder = $ShellApplication.Namespace(0x14)
-            $FontsFolder.CopyHere($FontFiles)
-        }
-    }
-)
-
-Write-Host "> Bootstrapping ..."
-
-for ($i = 0; $i -lt $Steps.Length; $i++) {
-    $Step = $Steps[$i]
-    if ($Step.Skip) { continue; }
-    Write-Host "> [$('{0:d2}' -f ($i + 1))/$('{0:d2}' -f $Steps.Length)] $($Step.Descriptor) ..."
-    Invoke-Command $Step.ScriptBlock
+    $ProfileScript.Trim() -replace "        ", "" | Out-File $PwshProfile -Encoding utf8
+    Write-Host "> Updated: $PwshProfile"
 }
 
-if ($NonTerminatingErrorCount -gt 0) {
-    Write-Warning ("Bootstrapping completed with $NonTerminatingErrorCount non-terminating errors. " `
-            + "It is recommended you resolve these errors and re-run the script.")
+function Install-NerdFont {
+    Write-Host "> Installing font: $NerdFont Nerd Font ..."
+
+    if ($NoFonts) {
+        Write-Warning "Skipping step."
+        return
+    }
+
+    $TargetRelease = "tags/v2.3.3"
+    $TargetAssetName = "$NerdFont.zip"
+    $FontFileFilter = "* Nerd Font Complete Windows Compatible.ttf"
+
+    # get GitHub asset
+    $Release = Invoke-RestMethod "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/$TargetRelease"
+    $TargetAsset = $Release.assets | Where-Object { $_.name -eq $TargetAssetName }
+    if (-Not $TargetAsset) {
+        $AvailableFonts = $Release.assets | Where-Object { $_.name -like "*.zip" } `
+        | ForEach-Object { $_.name -replace ".zip", "" } | Join-String -Separator ", "
+        Write-Error -ErrorAction 'Continue' "Nerd Font '$NerdFont' not found. Expected one of: $AvailableFonts"
+        $Script:NonTerminatingErrorCount++
+        return
+    }
+
+    # download fonts archive
+    $TempDirectory = [System.IO.Path]::GetTempPath()
+    $AssetArchive = (Join-Path $TempDirectory "nerd-fonts-asset-$($TargetAsset.id).zip")
+
+    if (-Not (Test-Path $AssetArchive) -or (Get-Item $AssetArchive).Length -ne $TargetAsset.size) {
+        New-Item -ItemType File -Path $AssetArchive | Out-Null
+        Invoke-RestMethod $TargetAsset.browser_download_url -OutFile $AssetArchive
+    }
+
+    # extract fonts archive
+    $ExtractFolder = (Join-Path $TempDirectory ([System.IO.Path]::GetFileNameWithoutExtension($AssetArchive)))
+    if (Test-Path $ExtractFolder) { Remove-Item -Force -Recurse $ExtractFolder }
+    New-Item -ItemType Directory -Path $ExtractFolder | Out-Null
+    Expand-Archive $AssetArchive $ExtractFolder
+
+    # install fonts
+    $ShellApplication = New-Object -ComObject Shell.Application
+    $FontFiles = $ShellApplication.Namespace($ExtractFolder).Items()
+    $FontFiles.Filter(0x40, $FontFileFilter)
+    if ($FontFiles.Count -eq 0) {
+        throw "No files found within asset '$TargetAssetName' matching the filter '$FontFileFilter'"
+    }
+    $script:NerdFontFamilyName = Get-FontFamilyName ($FontFiles | Select-Object -First 1).Path
+    $FontsFolder = $ShellApplication.Namespace(0x14)
+    $FontsFolder.CopyHere($FontFiles)
 }
-else {
-    Update-TerminalSettings
-    Write-Host "> Bootstrapping Complete!"
+
+function Main {
+    $Apps = [ordered]@{
+        "Windows Terminal" = "Microsoft.WindowsTerminal"
+        "PowerShell Core"  = "Microsoft.PowerShell"
+        "Git"              = "Git.Git"
+        "gsudo"            = "gerardog.gsudo"
+        "Oh My Posh"       = "XP8K0HKJFRXGCK"
+    }
+
+    $Modules = [ordered]@{
+        "Terminal-Icons" = "Terminal-Icons"
+        "posh-git"       = "posh-git"
+        "z"              = "z"
+    }
+
+    Write-Host "> Installing applications via winget ..."
+    $Apps.GetEnumerator() | ForEach-Object {
+        Write-Host "> Installing $($_.Name) ..."
+        winget install -e --id $_.Value --accept-source-agreements --accept-package-agreements
+        Update-Path
+    }
+
+    Write-Host "> Installing PowerShell Core modules ..."
+    $Modules.GetEnumerator() | ForEach-Object {
+        Write-Host "> Installing $($_.Name) ..."
+        Install-OrUpdateModule $_.Value
+    }
+
+    Update-PowerShellProfile
+    Install-NerdFont
+
+    if ($NonTerminatingErrorCount -gt 0) {
+        Write-Warning ("Bootstrapping completed with $NonTerminatingErrorCount non-terminating errors. " `
+                + "It is recommended you resolve these errors and re-run the script.")
+    }
+    else {
+        Update-TerminalSettings
+        Write-Host "> Bootstrapping Complete!"
+    }
 }
+
+Main
