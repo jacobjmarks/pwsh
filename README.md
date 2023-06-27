@@ -10,11 +10,13 @@ Uses Window's [winget](https://learn.microsoft.com/en-us/windows/package-manager
 
 ## Usage
 
-The script can be invoked with defaults via the following command:
+The script can be invoked remotely with defaults via the following command:
 
 ``` pwsh
 irm "https://raw.githubusercontent.com/jacobjmarks/pwsh/main/bootstrap.ps1" | iex
 ```
+
+> If you'd like to stabilise the script against changes, replace `main` with your commit hash of choice.
 
 ## Advanced Usage
 
@@ -22,34 +24,33 @@ For advanced usage scenarios and customisation, download the script and utilise 
 
 ``` pwsh
 irm "https://raw.githubusercontent.com/jacobjmarks/pwsh/main/bootstrap.ps1" -OutFile bootstrap.ps1
-
 Get-Help -Detailed .\bootstrap.ps1
 ```
 
 ### Available Parameters
 
-| Parameter   | Type     | Description                           | Default     |
-| ----------- | -------- | ------------------------------------- | ----------- |
-| `-Theme`    | `string` | Oh My Posh theme to configure for use | `"paradox"` |
-| `-NerdFont` | `string` | Nerd Font to install                  | `"Hack"`    |
-| `-NoFonts`  | `switch` | Skip installation of fonts            | `$false`    |
+| Parameter   | Type     | Description                                                           | Default     |
+| ----------- | -------- | --------------------------------------------------------------------- | ----------- |
+| `-Theme`    | `string` | Oh My Posh theme to configure for use                                 | `"paradox"` |
+| `-NerdFont` | `string` | [Nerd Font](https://ohmyposh.dev/docs/installation/fonts) to install. | `"Hack"`    |
+| `-NoFonts`  | `switch` | Skip installation of fonts                                            | `$false`    |
 
 ## Windows Terminal Configuration
 
-Once the bootstrapping script has been run, the following Windows Terminal configuration should be utilised.
+Once the bootstrapping script has been run, the following Windows Terminal configuration is recommended.
 
-Settings marked with a star &#x2726; are *required*.
+At a minimum, you should configure your Terminal to utilise a [Nerd Font](https://ohmyposh.dev/docs/installation/fonts), presumably the one that was installed via the bootstrapping script.
 
-|          | Setting                                                                                      | Value                               |
-| -------- | -------------------------------------------------------------------------------------------- | ----------------------------------- |
-|          | Startup > Default profile                                                                    | PowerShell                          |
-|          | Startup > Default terminal application                                                       | Windows Terminal                    |
-|          | Appearance > Application Theme                                                               | Dark                                |
-|          | Appearance > Use acrylic material in the tab row                                             | On                                  |
-|          | Profiles: Defaults > Additional settings: Appearance > Text: Color scheme                    | One Half Dark                       |
-| &#x2726; | Profiles: Defaults > Additional settings: Appearance > Text: Font face                       | Hack NF<br>(or your font of choice) |
-|          | Profiles: Defaults > Additional settings: Appearance > Transparency: Background opacity      | 75%                                 |
-|          | Profiles: Defaults > Additional settings: Appearance > Transparency: Enable acrylic material | On                                  |
+| Setting                                                                                      | Value            |
+| -------------------------------------------------------------------------------------------- | ---------------- |
+| Startup > Default profile                                                                    | PowerShell       |
+| Startup > Default terminal application                                                       | Windows Terminal |
+| Appearance > Application Theme                                                               | Dark             |
+| Appearance > Use acrylic material in the tab row                                             | On               |
+| Profiles: Defaults > Additional settings: Appearance > Text: Color scheme                    | One Half Dark    |
+| Profiles: Defaults > Additional settings: Appearance > Text: Font face                       | Hack NF          |
+| Profiles: Defaults > Additional settings: Appearance > Transparency: Background opacity      | 75%              |
+| Profiles: Defaults > Additional settings: Appearance > Transparency: Enable acrylic material | On               |
 
 ## Contents
 
@@ -67,7 +68,7 @@ The script installs the latest version of the following components (unless other
   A `sudo` equivalent for Windows.
 
 - [Oh My Posh](https://github.com/jandedobbeleer/oh-my-posh) (via Microsoft Store)\
-  *A prompt theme engine for any shell.*
+  _A prompt theme engine for any shell._
 
 - [Terminal-Icons](https://github.com/devblackops/Terminal-Icons)\
   Shows file and folder icons in the terminal.
