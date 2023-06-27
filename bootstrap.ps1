@@ -237,6 +237,11 @@ function Update-TerminalSettings {
             DesiredValue = $true
         }
         @{
+            SettingPath  = "profiles.defaults.useAtlasEngine"
+            CurrentValue = $TerminalSettings.profiles.defaults.useAtlasEngine
+            DesiredValue = $true
+        }
+        @{
             SettingPath  = "useAcrylicInTabRow"
             CurrentValue = $TerminalSettings.useAcrylicInTabRow
             DesiredValue = $true
