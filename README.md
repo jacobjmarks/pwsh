@@ -29,11 +29,11 @@ Get-Help -Detailed .\bootstrap.ps1
 
 ### Available Parameters
 
-| Parameter   | Type     | Description                                                           | Default     |
-| ----------- | -------- | --------------------------------------------------------------------- | ----------- |
-| `-Theme`    | `string` | Oh My Posh theme to configure for use                                 | `"paradox"` |
-| `-NerdFont` | `string` | [Nerd Font](https://ohmyposh.dev/docs/installation/fonts) to install. | `"Hack"`    |
-| `-NoFonts`  | `switch` | Skip installation of fonts                                            | `$false`    |
+| Parameter   | Type     | Description                                                               | Default     |
+| ----------- | -------- | ------------------------------------------------------------------------- | ----------- |
+| `-Theme`    | `string` | [Oh My Posh theme](https://ohmyposh.dev/docs/themes) to configure for use | `"paradox"` |
+| `-NerdFont` | `string` | [Nerd Font](https://ohmyposh.dev/docs/installation/fonts) to install.     | `"Hack"`    |
+| `-NoFonts`  | `switch` | Skip installation of fonts                                                | `$false`    |
 
 ## Windows Terminal Configuration
 
