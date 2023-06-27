@@ -6,7 +6,7 @@ A script to install and configure a Windows PowerShell Core environment powered 
 
 Designed to be largely non-opinionated, non-clobbering, and repeatable.
 
-Uses Window's [winget](https://learn.microsoft.com/en-us/windows/package-manager/) over other third-party package managers for lightweight and as-native application installation.
+Utilises the [Windows Package Manager](https://learn.microsoft.com/en-us/windows/package-manager/) over other third-party options for lightweight and as-native application installation.
 
 ## Usage
 
