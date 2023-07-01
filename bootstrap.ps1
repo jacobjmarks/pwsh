@@ -17,10 +17,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$ROOT_INVOCATION = $MyInvocation
-$NON_TERMINATING_ERROR_COUNT = 0
-$TERMINAL_SETTINGS_FILE_PATH = (Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
-$NERD_FONT_FAMILY_NAME = $null
+$rootInvocation = $MyInvocation
+$nonTerminatingErrorCount = 0
+$terminalSettingsFilePath = (Join-Path $env:LOCALAPPDATA "Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json")
+$nerdFontFamilyName = $null
 
 function Start-Main {
     if ($PSEdition -eq "Core" -and -not $IsWindows) {
@@ -39,17 +39,17 @@ function Start-Main {
             Update-Path
         }
 
-        if ($ROOT_INVOCATION.InvocationName) {
-            pwsh -NoExit -nop -wd $PWD -c $ROOT_INVOCATION.InvocationName @PSBoundParameters
+        if ($rootInvocation.InvocationName) {
+            pwsh -NoExit -nop -wd $PWD -c $rootInvocation.InvocationName @PSBoundParameters
         }
         else {
-            pwsh -NoExit -nop -wd $PWD -ec (Get-Base64String $ROOT_INVOCATION.MyCommand.ToString())
+            pwsh -NoExit -nop -wd $PWD -ec (Get-Base64String $rootInvocation.MyCommand.ToString())
         }
 
         return
     }
 
-    $Apps = @(
+    $apps = @(
         @{
             Name   = "Windows Terminal"
             Id     = "Microsoft.WindowsTerminal"
@@ -69,32 +69,32 @@ function Start-Main {
         }
     )
 
-    $Modules = @(
+    $modules = @(
         "Terminal-Icons"
         "posh-git"
         "z"
     )
 
     Write-Host "> Installing applications via winget"
-    $Apps | ForEach-Object {
+    $apps | ForEach-Object {
         Write-Host "> Installing $($_.Name) ..."
 
-        $AdditionalArgs = @(
+        $additionalArgs = @(
             "--accept-source-agreements"
             "--accept-package-agreements"
         )
 
         if ($_.Update -eq $false) {
-            $AdditionalArgs += "--no-upgrade"
+            $additionalArgs += "--no-upgrade"
         }
 
-        winget install -e --id $_.Id @AdditionalArgs
+        winget install -e --id $_.Id @additionalArgs
 
         Update-Path
     }
 
     Write-Host "> Installing PowerShell Core modules"
-    $Modules | ForEach-Object {
+    $modules | ForEach-Object {
         Write-Host "> Installing $_ ..."
         Install-OrUpdateModule $_
     }
@@ -102,8 +102,8 @@ function Start-Main {
     Update-PowerShellProfile
     Install-NerdFont
 
-    if ($NON_TERMINATING_ERROR_COUNT -gt 0) {
-        Write-Warning ("Bootstrapping completed with $NON_TERMINATING_ERROR_COUNT non-terminating errors. " `
+    if ($nonTerminatingErrorCount -gt 0) {
+        Write-Warning ("Bootstrapping completed with $nonTerminatingErrorCount non-terminating errors. " `
                 + "It is recommended you resolve these errors and re-run the script.")
     }
     else {
@@ -115,17 +115,17 @@ function Start-Main {
 function Update-PowerShellProfile {
     Write-Host "> Configuring PowerShell Core profile ..."
 
-    $PoshThemesPath = [System.Environment]::GetEnvironmentVariable("POSH_THEMES_PATH", "User")
-    $ThemeFile = [System.IO.FileInfo](Join-Path $PoshThemesPath "$Theme.omp.json")
-    if (-not $ThemeFile.Exists) {
-        $AvailableThemes = Get-ChildItem $PoshThemesPath -Filter "*.omp.json" `
+    $poshThemesPath = [System.Environment]::GetEnvironmentVariable("POSH_THEMES_PATH", "User")
+    $themeFile = [System.IO.FileInfo](Join-Path $poshThemesPath "$Theme.omp.json")
+    if (-not $themeFile.Exists) {
+        $availableThemes = Get-ChildItem $poshThemesPath -Filter "*.omp.json" `
         | ForEach-Object { $_.Name -replace ".omp.json", "" } | Join-String -Separator ", "
-        Write-Error -ErrorAction 'Continue' "Oh My Posh theme '$Theme' not found. Expected one of: $AvailableThemes"
-        $Script:NON_TERMINATING_ERROR_COUNT++
+        Write-Error -ErrorAction 'Continue' "Oh My Posh theme '$Theme' not found. Expected one of: $availableThemes"
+        $Script:nonTerminatingErrorCount++
         return
     }
 
-    $ProfileScript = {
+    $profileScript = {
         Import-Module posh-git
         Import-Module Terminal-Icons
 
@@ -133,19 +133,19 @@ function Update-PowerShellProfile {
 
         Set-PSReadLineOption -PredictionSource History
         Set-PSReadLineOption -PredictionViewStyle ListView
-    }.ToString() -replace "{{THEME_FILE_NAME}}", $ThemeFile.Name
+    }.ToString() -replace "{{THEME_FILE_NAME}}", $themeFile.Name
 
-    $PwshProfile = pwsh -nop -c { $PROFILE }
+    $pwshProfile = pwsh -nop -c { $PROFILE }
 
-    if ((Test-Path $PwshProfile) -and (Get-Content $PwshProfile).Trim().Length -gt 0) {
-        Write-Warning "Your PowerShell profile is not empty.`n$PwshProfile"
+    if ((Test-Path $pwshProfile) -and (Get-Content $pwshProfile).Trim().Length -gt 0) {
+        Write-Warning "Your PowerShell profile is not empty.`n$pwshProfile"
         if ($Host.UI.PromptForChoice($null, "Overwrite?", @("&Yes", "&No"), 1) -ne 0) {
             return
         }
     }
 
-    $ProfileScript.Trim() -replace "        ", "" | Out-File $PwshProfile -Encoding utf8
-    Write-Host "> Updated: $PwshProfile"
+    $profileScript.Trim() -replace "        ", "" | Out-File $pwshProfile -Encoding utf8
+    Write-Host "> Updated: $pwshProfile"
 }
 
 function Install-NerdFont {
@@ -156,46 +156,46 @@ function Install-NerdFont {
         return
     }
 
-    $TargetRelease = "tags/v2.3.3"
-    $TargetAssetName = "$NerdFont.zip"
-    $FontFileFilter = "* Nerd Font Complete Windows Compatible.ttf"
+    $targetRelease = "tags/v2.3.3"
+    $targetAssetName = "$NerdFont.zip"
+    $fontFileFilter = "* Nerd Font Complete Windows Compatible.ttf"
 
     # get GitHub asset
-    $Release = Invoke-RestMethod "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/$TargetRelease"
-    $TargetAsset = $Release.assets | Where-Object { $_.name -eq $TargetAssetName }
-    if (-not $TargetAsset) {
-        $AvailableFonts = $Release.assets | Where-Object { $_.name -like "*.zip" } `
+    $release = Invoke-RestMethod "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/$targetRelease"
+    $targetAsset = $release.assets | Where-Object { $_.name -eq $targetAssetName }
+    if (-not $targetAsset) {
+        $availableFonts = $release.assets | Where-Object { $_.name -like "*.zip" } `
         | ForEach-Object { $_.name -replace ".zip", "" } | Join-String -Separator ", "
-        Write-Error -ErrorAction 'Continue' "Nerd Font '$NerdFont' not found. Expected one of: $AvailableFonts"
-        $Script:NON_TERMINATING_ERROR_COUNT++
+        Write-Error -ErrorAction 'Continue' "Nerd Font '$NerdFont' not found. Expected one of: $availableFonts"
+        $Script:nonTerminatingErrorCount++
         return
     }
 
     # download fonts archive
-    $TempDirectory = [System.IO.Path]::GetTempPath()
-    $AssetArchive = (Join-Path $TempDirectory "nerd-fonts-asset-$($TargetAsset.id).zip")
+    $tempDirectory = [System.IO.Path]::GetTempPath()
+    $assetArchive = (Join-Path $tempDirectory "nerd-fonts-asset-$($targetAsset.id).zip")
 
-    if (-not (Test-Path $AssetArchive) -or (Get-Item $AssetArchive).Length -ne $TargetAsset.size) {
-        New-Item -ItemType File -Path $AssetArchive | Out-Null
-        Invoke-RestMethod $TargetAsset.browser_download_url -OutFile $AssetArchive
+    if (-not (Test-Path $assetArchive) -or (Get-Item $assetArchive).Length -ne $targetAsset.size) {
+        New-Item -ItemType File -Path $assetArchive | Out-Null
+        Invoke-RestMethod $targetAsset.browser_download_url -OutFile $assetArchive
     }
 
     # extract fonts archive
-    $ExtractFolder = (Join-Path $TempDirectory ([System.IO.Path]::GetFileNameWithoutExtension($AssetArchive)))
-    if (Test-Path $ExtractFolder) { Remove-Item -Force -Recurse $ExtractFolder }
-    New-Item -ItemType Directory -Path $ExtractFolder | Out-Null
-    Expand-Archive $AssetArchive $ExtractFolder
+    $extractFolder = (Join-Path $tempDirectory ([System.IO.Path]::GetFileNameWithoutExtension($assetArchive)))
+    if (Test-Path $extractFolder) { Remove-Item -Force -Recurse $extractFolder }
+    New-Item -ItemType Directory -Path $extractFolder | Out-Null
+    Expand-Archive $assetArchive $extractFolder
 
     # install fonts
-    $ShellApplication = New-Object -ComObject Shell.Application
-    $FontFiles = $ShellApplication.Namespace($ExtractFolder).Items()
-    $FontFiles.Filter(0x40, $FontFileFilter)
-    if ($FontFiles.Count -eq 0) {
-        throw "No files found within asset '$TargetAssetName' matching the filter '$FontFileFilter'"
+    $shellApplication = New-Object -ComObject Shell.Application
+    $fontFiles = $shellApplication.Namespace($extractFolder).Items()
+    $fontFiles.Filter(0x40, $fontFileFilter)
+    if ($fontFiles.Count -eq 0) {
+        throw "No files found within asset '$targetAssetName' matching the filter '$fontFileFilter'"
     }
-    $Script:NERD_FONT_FAMILY_NAME = Get-FontFamilyName ($FontFiles | Select-Object -First 1).Path
-    $FontsFolder = $ShellApplication.Namespace(0x14)
-    $FontsFolder.CopyHere($FontFiles)
+    $Script:nerdFontFamilyName = Get-FontFamilyName ($fontFiles | Select-Object -First 1).Path
+    $fontsFolder = $shellApplication.Namespace(0x14)
+    $fontsFolder.CopyHere($fontFiles)
 }
 
 function Get-FontFamilyName {
@@ -205,18 +205,18 @@ function Get-FontFamilyName {
     )
 
     Add-Type -AssemblyName System.Drawing
-    $FontCollection = [System.Drawing.Text.PrivateFontCollection]::new()
+    $fontCollection = [System.Drawing.Text.PrivateFontCollection]::new()
     try {
-        $FontCollection.AddFontFile($File)
-        $FontCollection.Families.Name
+        $fontCollection.AddFontFile($File)
+        $fontCollection.Families.Name
     }
     finally {
-        $FontCollection.Dispose()
+        $fontCollection.Dispose()
     }
 }
 
 function Initialize-TerminalSettings {
-    if (Test-Path $TERMINAL_SETTINGS_FILE_PATH) {
+    if (Test-Path $terminalSettingsFilePath) {
         return
     }
 
@@ -225,97 +225,97 @@ function Initialize-TerminalSettings {
     wt --version # Starts a new Terminal process
 
     # Wait for the Terminal process to initialise its settings file, then terminate
-    $LatestWindowsTerminalProcess = @(Get-Process -Name WindowsTerminal -ErrorAction Ignore) | Sort-Object -Property StartTime | Select-Object -Last 1
-    while (-not (Test-Path $TERMINAL_SETTINGS_FILE_PATH)) {
+    $latestWindowsTerminalProcess = @(Get-Process -Name WindowsTerminal -ErrorAction Ignore) | Sort-Object -Property StartTime | Select-Object -Last 1
+    while (-not (Test-Path $terminalSettingsFilePath)) {
         Start-Sleep -Milliseconds 50
     }
-    $LatestWindowsTerminalProcess | Stop-Process
+    $latestWindowsTerminalProcess | Stop-Process
 }
 
 function Update-TerminalSettings {
     Initialize-TerminalSettings
 
     Write-Host "> Checking Windows Terminal settings ..."
-    $TerminalSettings = Get-Content $TERMINAL_SETTINGS_FILE_PATH | ConvertFrom-Json
+    $terminalSettings = Get-Content $terminalSettingsFilePath | ConvertFrom-Json
 
-    $Manifest = @(
+    $manifest = @(
         @{
             SettingPath  = "profiles.defaults.colorScheme"
-            CurrentValue = $TerminalSettings.profiles.defaults.colorScheme
+            CurrentValue = $terminalSettings.profiles.defaults.colorScheme
             DesiredValue = "One Half Dark"
         }
         @{
             SettingPath  = "profiles.defaults.font.face"
-            CurrentValue = $TerminalSettings.profiles.defaults.font.face
-            DesiredValue = "$NERD_FONT_FAMILY_NAME"
+            CurrentValue = $terminalSettings.profiles.defaults.font.face
+            DesiredValue = "$nerdFontFamilyName"
         }
         @{
             SettingPath  = "profiles.defaults.opacity"
-            CurrentValue = $TerminalSettings.profiles.defaults.opacity
+            CurrentValue = $terminalSettings.profiles.defaults.opacity
             DesiredValue = 75
         }
         @{
             SettingPath  = "profiles.defaults.useAcrylic"
-            CurrentValue = $TerminalSettings.profiles.defaults.useAcrylic
+            CurrentValue = $terminalSettings.profiles.defaults.useAcrylic
             DesiredValue = $true
         }
         @{
             SettingPath  = "profiles.defaults.useAtlasEngine"
-            CurrentValue = $TerminalSettings.profiles.defaults.useAtlasEngine
+            CurrentValue = $terminalSettings.profiles.defaults.useAtlasEngine
             DesiredValue = $true
         }
         @{
             SettingPath  = "useAcrylicInTabRow"
-            CurrentValue = $TerminalSettings.useAcrylicInTabRow
+            CurrentValue = $terminalSettings.useAcrylicInTabRow
             DesiredValue = $true
         }
     )
 
-    $CoreTerminalProfile = $TerminalSettings.profiles.list | Where-Object { $_.source -eq "Windows.Terminal.PowershellCore" } | Select-Object -First 1
-    if ($CoreTerminalProfile) {
-        $Manifest += @{
+    $coreTerminalProfile = $terminalSettings.profiles.list | Where-Object { $_.source -eq "Windows.Terminal.PowershellCore" } | Select-Object -First 1
+    if ($coreTerminalProfile) {
+        $manifest += @{
             SettingPath  = "defaultProfile"
-            CurrentValue = $TerminalSettings.defaultProfile
-            DesiredValue = $CoreTerminalProfile.guid
+            CurrentValue = $terminalSettings.defaultProfile
+            DesiredValue = $coreTerminalProfile.guid
         }
     }
     else {
         Write-Warning "Skipping Terminal setting 'defaultProfile'; Could not find PowerShell Core profile"
     }
 
-    $Manifest = ($Manifest | Sort-Object -Property SettingPath)
+    $manifest = ($manifest | Sort-Object -Property SettingPath)
 
-    $DiscrepantSettings = $Manifest | Where-Object { $_.CurrentValue -ne $_.DesiredValue }
-    if (-not $DiscrepantSettings) {
+    $discrepantSettings = $manifest | Where-Object { $_.CurrentValue -ne $_.DesiredValue }
+    if (-not $discrepantSettings) {
         return
     }
 
-    foreach ($Entry in $DiscrepantSettings) {
-        Write-Host "    $($Entry.SettingPath) = $(if($Entry.CurrentValue){$Entry.CurrentValue}else{"NULL"}) -> $($Entry.DesiredValue)"
+    foreach ($entry in $discrepantSettings) {
+        Write-Host "    $($entry.SettingPath) = $(if($entry.CurrentValue){$entry.CurrentValue}else{"NULL"}) -> $($entry.DesiredValue)"
     }
 
     if ($Host.UI.PromptForChoice($null, "Update Windows Terminal settings as above? (recommended)", @("&Yes", "&No"), 1) -ne 0) {
         return
     }
 
-    foreach ($Entry in $DiscrepantSettings) {
-        $Segments = $Entry.SettingPath -split "\."
+    foreach ($entry in $discrepantSettings) {
+        $segments = $entry.SettingPath -split "\."
 
         # hydrate
-        $Ptr = $TerminalSettings
-        foreach ($Segment in ($Segments | Select-Object -SkipLast 1)) {
-            if (-not $Ptr."$Segment") {
-                $Ptr | Add-Member -notePropertyName $Segment -notePropertyValue ([PSCustomObject]@{})
+        $ptr = $terminalSettings
+        foreach ($segment in ($segments | Select-Object -SkipLast 1)) {
+            if (-not $ptr."$segment") {
+                $ptr | Add-Member -notePropertyName $segment -notePropertyValue ([PSCustomObject]@{})
             }
-            $Ptr = $Ptr."$Segment"
+            $ptr = $ptr."$segment"
         }
 
         # set desired value
-        $Ptr | Add-Member -notePropertyName ($Segments | Select-Object -Last 1) -notePropertyValue $Entry.DesiredValue -Force
+        $ptr | Add-Member -notePropertyName ($segments | Select-Object -Last 1) -notePropertyValue $entry.DesiredValue -Force
     }
 
-    $TerminalSettings | ConvertTo-Json -Depth 100 | Out-File $TERMINAL_SETTINGS_FILE_PATH -Encoding utf8
-    Write-Host "> Updated: $TERMINAL_SETTINGS_FILE_PATH"
+    $terminalSettings | ConvertTo-Json -Depth 100 | Out-File $terminalSettingsFilePath -Encoding utf8
+    Write-Host "> Updated: $terminalSettingsFilePath"
 }
 
 function Update-Path {
@@ -331,8 +331,8 @@ function Get-Base64String {
         [string] $Value
     )
 
-    $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Value)
-    [Convert]::ToBase64String($Bytes)
+    $bytes = [System.Text.Encoding]::Unicode.GetBytes($Value)
+    [Convert]::ToBase64String($bytes)
 }
 
 function Install-OrUpdateModule {
