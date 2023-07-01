@@ -59,7 +59,7 @@ The script installs/updates the following components (unless otherwise stated):
 
 ### Applications
 
-- [Windows Terminal](https://github.com/microsoft/terminal)
+- [Windows Terminal](https://github.com/microsoft/terminal) (does not update)
 - [PowerShell Core](https://github.com/PowerShell/PowerShell) (does not update)
 - [Git](https://git-scm.com/download/win)
 
