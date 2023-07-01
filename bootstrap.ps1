@@ -75,7 +75,7 @@ function Start-Main {
         "z"
     )
 
-    Write-Host "> Installing applications via winget ..."
+    Write-Host "> Installing applications via winget"
     $Apps | ForEach-Object {
         Write-Host "> Installing $($_.Name) ..."
 
@@ -93,7 +93,7 @@ function Start-Main {
         Update-Path
     }
 
-    Write-Host "> Installing PowerShell Core modules ..."
+    Write-Host "> Installing PowerShell Core modules"
     $Modules | ForEach-Object {
         Write-Host "> Installing $_ ..."
         Install-OrUpdateModule $_
