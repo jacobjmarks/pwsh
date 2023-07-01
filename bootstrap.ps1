@@ -51,7 +51,6 @@ function Start-Main {
 
     $Apps = [ordered]@{
         "Windows Terminal" = "Microsoft.WindowsTerminal"
-        "PowerShell Core"  = "Microsoft.PowerShell"
         "Git"              = "Git.Git"
         "gsudo"            = "gerardog.gsudo"
         "Oh My Posh"       = "XP8K0HKJFRXGCK"
