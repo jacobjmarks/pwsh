@@ -77,7 +77,18 @@ function Start-Main {
     Write-Host "> Installing applications via winget ..."
     $Apps | ForEach-Object {
         Write-Host "> Installing $($_.Name) ..."
-        winget install -e --id $_.Id --accept-source-agreements --accept-package-agreements
+
+        $AdditionalArgs = @(
+            "--accept-source-agreements"
+            "--accept-package-agreements"
+        )
+
+        if ($_.Update -eq $false) {
+            $AdditionalArgs += "--no-upgrade"
+        }
+
+        winget install -e --id $_.Id @AdditionalArgs
+
         Update-Path
     }
 
