@@ -55,12 +55,12 @@ At a minimum, you should configure your Terminal to utilise a [Nerd Font](https:
 
 ## Contents
 
-The script installs the latest version of the following components (unless otherwise stated):
+The script installs/updates the following components (unless otherwise stated):
 
 ### Applications
 
 - [Windows Terminal](https://github.com/microsoft/terminal)
-- [PowerShell Core](https://github.com/PowerShell/PowerShell)
+- [PowerShell Core](https://github.com/PowerShell/PowerShell) (does not update)
 - [Git](https://git-scm.com/download/win)
 
 ### Modules / Tooling
