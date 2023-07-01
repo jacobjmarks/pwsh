@@ -51,8 +51,9 @@ function Start-Main {
 
     $Apps = @(
         @{
-            Name = "Windows Terminal"
-            Id   = "Microsoft.WindowsTerminal"
+            Name   = "Windows Terminal"
+            Id     = "Microsoft.WindowsTerminal"
+            Update = $false
         }
         @{
             Name = "Git"
