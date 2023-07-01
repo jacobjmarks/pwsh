@@ -49,30 +49,42 @@ function Start-Main {
         return
     }
 
-    $Apps = [ordered]@{
-        "Windows Terminal" = "Microsoft.WindowsTerminal"
-        "Git"              = "Git.Git"
-        "gsudo"            = "gerardog.gsudo"
-        "Oh My Posh"       = "XP8K0HKJFRXGCK"
-    }
+    $Apps = @(
+        @{
+            Name = "Windows Terminal"
+            Id   = "Microsoft.WindowsTerminal"
+        }
+        @{
+            Name = "Git"
+            Id   = "Git.Git"
+        }
+        @{
+            Name = "gsudo"
+            Id   = "gerardog.gsudo"
+        }
+        @{
+            Name = "Oh My Posh"
+            Id   = "XP8K0HKJFRXGCK"
+        }
+    )
 
-    $Modules = [ordered]@{
-        "Terminal-Icons" = "Terminal-Icons"
-        "posh-git"       = "posh-git"
-        "z"              = "z"
-    }
+    $Modules = @(
+        "Terminal-Icons"
+        "posh-git"
+        "z"
+    )
 
     Write-Host "> Installing applications via winget ..."
-    $Apps.GetEnumerator() | ForEach-Object {
+    $Apps | ForEach-Object {
         Write-Host "> Installing $($_.Name) ..."
-        winget install -e --id $_.Value --accept-source-agreements --accept-package-agreements
+        winget install -e --id $_.Id --accept-source-agreements --accept-package-agreements
         Update-Path
     }
 
     Write-Host "> Installing PowerShell Core modules ..."
-    $Modules.GetEnumerator() | ForEach-Object {
-        Write-Host "> Installing $($_.Name) ..."
-        Install-OrUpdateModule $_.Value
+    $Modules | ForEach-Object {
+        Write-Host "> Installing $_ ..."
+        Install-OrUpdateModule $_
     }
 
     Update-PowerShellProfile
