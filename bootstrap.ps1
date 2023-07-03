@@ -305,13 +305,13 @@ function Update-TerminalSettings {
         $ptr = $terminalSettings
         foreach ($segment in ($segments | Select-Object -SkipLast 1)) {
             if (-not $ptr."$segment") {
-                $ptr | Add-Member -notePropertyName $segment -notePropertyValue ([PSCustomObject]@{})
+                $ptr | Add-Member -NotePropertyName $segment -NotePropertyValue ([PSCustomObject]@{})
             }
             $ptr = $ptr."$segment"
         }
 
         # set desired value
-        $ptr | Add-Member -notePropertyName ($segments | Select-Object -Last 1) -notePropertyValue $entry.DesiredValue -Force
+        $ptr | Add-Member -NotePropertyName ($segments | Select-Object -Last 1) -NotePropertyValue $entry.DesiredValue -Force
     }
 
     $terminalSettings | ConvertTo-Json -Depth 100 | Out-File $terminalSettingsFilePath -Encoding utf8
