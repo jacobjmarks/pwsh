@@ -130,6 +130,7 @@ function Update-PowerShellProfile {
         Import-Module Terminal-Icons
 
         oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\{{THEME_FILE_NAME}}" | Invoke-Expression
+        $env:POSH_GIT_ENABLED = $true
 
         Set-PSReadLineOption -PredictionSource History
         Set-PSReadLineOption -PredictionViewStyle ListView
