@@ -49,7 +49,7 @@ At a minimum, you should configure your Terminal to utilise a [Nerd Font](https:
 | Appearance > Use acrylic material in the tab row                                             | `true`           |
 | Rendering > Use the new text renderer ("AtlasEngine")                                        | `true`           |
 | Profiles: Defaults > Additional settings: Appearance > Text: Color scheme                    | One Half Dark    |
-| Profiles: Defaults > Additional settings: Appearance > Text: Font face                       | Hack NF          |
+| Profiles: Defaults > Additional settings: Appearance > Text: Font face                       | Hack Nerd Font   |
 | Profiles: Defaults > Additional settings: Appearance > Transparency: Background opacity      | 75%              |
 | Profiles: Defaults > Additional settings: Appearance > Transparency: Enable acrylic material | `true`           |
 
