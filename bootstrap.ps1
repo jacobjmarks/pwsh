@@ -194,6 +194,7 @@ function Install-NerdFont {
     if ($fontFiles.Count -eq 0) {
         throw "No files found within asset '$targetAssetName' matching the filter '$fontFileFilter'"
     }
+    $fontFiles | ForEach-Object { Write-Host ">   $($_.Name)" }
     $Script:nerdFontFamilyName = Get-FontFamilyName ($fontFiles | Select-Object -First 1).Path
     $fontsFolder = $shellApplication.Namespace(0x14)
     $fontsFolder.CopyHere($fontFiles)
