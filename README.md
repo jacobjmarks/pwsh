@@ -82,7 +82,7 @@ The script installs/updates the following components (unless otherwise stated):
 
 ### Fonts
 
-- [Hack Nerd Font (v2.3.3)](https://github.com/ryanoasis/nerd-fonts)
+- [Hack Nerd Font](https://github.com/ryanoasis/nerd-fonts)
 
 ## Inspiration
 

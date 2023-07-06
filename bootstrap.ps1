@@ -157,9 +157,9 @@ function Install-NerdFont {
         return
     }
 
-    $targetRelease = "tags/v2.3.3"
+    $targetRelease = "latest"
     $targetAssetName = "$NerdFont.zip"
-    $fontFileFilter = "* Nerd Font Complete Windows Compatible.ttf"
+    $fontFileFilter = "*NerdFont-*.ttf" # exclude mono/propo fonts
 
     # get GitHub asset
     $release = Invoke-RestMethod "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/$targetRelease"
