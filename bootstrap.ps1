@@ -347,7 +347,7 @@ function Install-OrUpdateModule {
         Install-Module $Name -Force
     }
     else {
-        Update-Module $Name
+        Update-Module $Name -Force
     }
 }
 
