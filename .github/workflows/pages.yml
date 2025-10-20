@@ -3,7 +3,7 @@ name: Deploy to GH Pages
 on:
   push:
     branches: ["main"]
-    paths: '.github/pages'
+    paths: 'bootstrap.ps1'
 
   workflow_dispatch:
 
@@ -28,11 +28,11 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Prepare artifact
-        run: mkdir -p .github/pages && cp bootstrap.ps1 .github/pages/bootstrap.ps1
+        run: mkdir -p dist && cp bootstrap.ps1 dist/up
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.github/pages'
+          path: 'dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
