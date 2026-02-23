@@ -13,17 +13,17 @@ Utilises the [Windows Package Manager](https://learn.microsoft.com/en-us/windows
 The script can be invoked remotely with defaults via the following command:
 
 ``` pwsh
-irm "https://raw.githubusercontent.com/jacobjmarks/pwsh/main/bootstrap.ps1" | iex
+irm "jacobjmarks.dev/pwsh/up" | iex
 ```
 
-> If you'd like to stabilise the script against changes, replace `main` with your commit hash of choice.
+> [jacobjmarks.dev/pwsh/up](https://jacobjmarks.dev/pwsh/up) is a link which fetches the [bootstrap.ps1](/bootstrap.ps1) script, deployed via GitHub Pages.
 
 ## Advanced Usage
 
 For advanced usage scenarios and customisation, download the script and utilise the available CLI arguments:
 
 ``` pwsh
-irm "https://raw.githubusercontent.com/jacobjmarks/pwsh/main/bootstrap.ps1" -OutFile bootstrap.ps1
+irm "jacobjmarks.dev/pwsh/up" -OutFile bootstrap.ps1
 Get-Help -Detailed .\bootstrap.ps1
 ```
 
